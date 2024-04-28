@@ -1,0 +1,3 @@
+export const ARBERTURA_CLINICA = 9 // EM HORAS
+export const FECHAMENTO_CLINICA = 17 // EM HORAS
+export const INTERVALO = 30 // EM MINUTOS

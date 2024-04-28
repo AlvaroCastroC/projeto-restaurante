@@ -1,0 +1,74 @@
+details {
+    position: relative;
+}
+
+summary {
+    cursor: pointer;
+    list-style-type: ' ';
+    padding: 0 5px;
+
+}
+
+details[open] article {
+    display: none;
+
+}
+
+.link {
+    margin: 0 5px;
+}
+
+.link:hover {
+    color: rgb(7, 65, 173)
+}
+
+details[open]:hover summary,
+article {
+    background-color: rgba(97, 95, 95, 0.1);
+    border-radius: 5px 5px 0 0;
+
+}
+
+
+details[open]:hover article {
+    display: flex;
+    flex-direction: column;
+    z-index: 1;
+    position: absolute;
+    padding: 5px 0;
+    gap: 5px;
+    text-align: center;
+    width: 100%;
+    font-size: 0.9rem;
+
+    border-radius: 0 0 5px 5px;
+
+
+
+}
+
+
+nav {
+    text-transform: uppercase;
+}
+
+details[open] article .link:hover {
+    background-color: var(--main-color);
+}
+
+
+details[open] summary~* {
+    animation: sweep .5s ease-in-out;
+}
+
+@keyframes sweep {
+    0% {
+        opacity: 0;
+        margin-top: -15px
+    }
+
+    100% {
+        opacity: 1;
+        margin-top: 0px
+    }
+}
