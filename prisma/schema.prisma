@@ -10,14 +10,40 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Usuario {
-    id       String @id @default(uuid())
-    name     String
-    email    String @unique
-    password String
+model User {
+    id         String @id @default(uuid())
+    firstName  String
+    secondName String
+    email      String @unique
+    password   String
+    phone      String @db.VarChar(11)
+
+    passwordResetToken   String? @db.VarChar(200)
+    passwordResetExpires String?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
     @@map("usuarios")
+}
+
+model Day {
+    id        String @id @default(cuid())
+    name      String // segunda, terça...
+    dayOfWeek Int // dia das semana que sera vista por indíces
+    openTime  String
+    closeTime String
+}
+
+model ClosedDay {
+    id   String   @id @default(cuid())
+    date DateTime @unique
+}
+
+model Client {
+    id          Int    @id @default(autoincrement())
+    bookingDate String
+    clientName  String
+    phone       String
+    email       String @unique
 }
