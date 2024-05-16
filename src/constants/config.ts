@@ -1,3 +1,9 @@
-export const ARBERTURA_CLINICA = 9 // EM HORAS
-export const FECHAMENTO_CLINICA = 17 // EM HORAS
-export const INTERVALO = 30 // EM MINUTOS
+export const ARBERTURA = 8
+export const FECHAMENTO = 12
+export const INTERVALO = 30
+
+export const START_WORKING_HOURS = 6
+export const END_WORKING_HOURS = 21
+export const FIXED_LENGTH_SERVICE = 45
+
+export const now = new Date() 
