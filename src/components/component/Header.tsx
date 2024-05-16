@@ -1,44 +1,78 @@
-import { Flex, SlideFade, useBoolean } from "@chakra-ui/react"
+import { CalendarIcon, HamburgerIcon, } from "@chakra-ui/icons"
+import { GrLogin, } from "react-icons/gr";
+import { RiHome2Line, RiMoonLine, RiSunLine } from "react-icons/ri";
+import { Button, FormControl, FormLabel, Menu, MenuButton, MenuItem, MenuList, Popover, PopoverArrow, PopoverBody, PopoverContent, PopoverTrigger, Switch, useBoolean, useColorMode } from "@chakra-ui/react"
 import Link from "next/link"
 
-
 function Header() {
-    const [flag, setFlag] = useBoolean()
-
+    const { colorMode, toggleColorMode } = useColorMode();
     return (
-        <header className=" w-[100%] bg-white">
-            <div className="MAX-CONTAINER h-24 m-auto flex items-center justify-between px-6 ">
+        <header className=" w-[100%]">
+            <div className="MAX-CONTAINER h-24 flex items-center justify-between ">
                 <div className="flex justify-center gap-1">
                     <img src="" alt="Logo" title="Logo" />
-                    <Link href="/" className="text-2xl  px-1">Nome da loja</Link >
+                    Nome da loja
                 </div>
 
                 <nav className="flex items-center gap-3 ">
                     <Link href="/sobre" className="text-[1.3rem] px-1 transition ease-in duration-400	  hover:border-blue-500 hover:border-b-2 "> Sobre nós </Link>
 
-                    <div onMouseEnter={setFlag.on} onMouseLeave={setFlag.off} >
-
-                        <p className="flex gap-2 p-1 items-center cursor-pointer w-full text-[1.3rem] transition ease-in duration-400 hover:border-blue-500 hover:border-b-2 ">Nossos serviços</p>
-                        <SlideFade in={flag} offsetY='-4px' transition={{ exit: { delay: 0.5 }, enter: { duration: 0.5 } }}
-                        >
-                            <Flex position="absolute" p="15px" w="11rem"
-                                direction="column" alignItems="center" className=" shadow-[0px_50px_50px_-35px_rgba(0,0,0,0.2)] gap-2 " bg="white">
-                                <Link href="/servico1" className="text-[1rem] hover:text-[rgba(7,65,173,1)] ">Serviços 1</Link>
+                    <Popover trigger="hover" >
+                        <PopoverTrigger>
+                            <Button bg="none" _hover={{ bg: "none", color: "blue" }}>Serviços</Button>
+                        </PopoverTrigger>
+                        <PopoverContent w="100% " p="15px">
+                            <PopoverArrow />
+                            <PopoverBody className="flex flex-col items w-full gap-3">
+                                < Link href="/servico1" className="text-[1rem] hover:text-[rgba(7,65,173,1)] " > Serviços 1</Link >
                                 <Link href="/servico2" className="text-[1rem] hover:text-[rgba(7,65,173,1)] ">Serviços 2</Link>
                                 <Link href="/servico3" className="text-[1rem] hover:text-[rgba(7,65,173,1)] ">Serviços 3</Link>
-                            </Flex>
-                        </SlideFade>
-                    </div>
-
+                            </PopoverBody>
+                        </PopoverContent>
+                    </Popover>
 
                     <Link href="/contato" className="text-[1.3rem] px-1 transition ease-in duration-400 hover:border-blue-500 hover:border-b-2">Contato</Link>
-                    <Link href="/login" className="text-[1.3rem] px-1 transition ease-in duration-400 hover:border-blue-500 hover:border-b-2"> Login</Link>
+
+
                 </nav>
+                <Menu >
+                    <MenuButton
+                        as={Button}
+                        aria-label='Options'
+                        rightIcon={<HamburgerIcon />}
+                        variant='none'
+                        _hover={{ bgColor: "#Abaa", }}
+                        _active={{ bgColor: "blue" }}
+                    >
+                        Menu
+                    </MenuButton>
+
+                    <MenuList>
+
+                        <MenuItem as={Link} href="/login" icon={<GrLogin />}  >
+                            Login
+                        </MenuItem>
+                        <MenuItem as={Link} href='/agendamento' icon={<CalendarIcon />} >
+                            Agendar horário
+                        </MenuItem>
+                        <MenuItem as={Link} href="/" icon={<RiHome2Line />} >
+                            Home
+                        </MenuItem>
+                        <MenuItem closeOnSelect={false} iconSpacing={"12px"}>
+                            <FormControl display='flex' alignItems='center'>
+                                <FormLabel mb='0'>
+                                    {colorMode === 'dark' ? <RiMoonLine /> : <RiSunLine />}
+                                </FormLabel>
+                                <Switch onChange={toggleColorMode} />
+                            </FormControl>
+                        </MenuItem>
+                    </MenuList>
+                </Menu>
+
             </div >
         </header >
     )
 }
 
 export default Header
-
 
