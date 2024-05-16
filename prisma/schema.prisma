@@ -33,6 +33,9 @@ model Day {
     dayOfWeek Int // dia das semana que sera vista por indíces
     openTime  String
     closeTime String
+
+    initLanch String
+    endLanch  String
 }
 
 model ClosedDay {
@@ -41,9 +44,10 @@ model ClosedDay {
 }
 
 model Client {
-    id          Int    @id @default(autoincrement())
-    bookingDate String
+    id          Int      @id @default(autoincrement())
+    bookingDate DateTime
     clientName  String
     phone       String
-    email       String @unique
+    email       String   @unique
+    service     String
 }
