@@ -44,8 +44,16 @@ export const bookingRouter = router({
                     where: { email },
                     data: {
                         bookingDate,
-                        service
-                    }
+                        service: {
+                            update: {
+                                name: service,
+                                price: 30.55
+                            }
+                        }
+
+                    },
+
+
                 })
                 return { success: true, message: "Horário remarcado com sucesso." }
             } else {
@@ -53,8 +61,15 @@ export const bookingRouter = router({
                     where: { email },
                     data: {
                         bookingDate,
-                        service
-                    }
+                        service: {
+                            update: {
+                                name: service,
+                                price: 40.55
+                            }
+                        }
+
+                    },
+
                 })
                 return { success: true, message: "Horário marcado com sucesso." }
             }
@@ -65,15 +80,18 @@ export const bookingRouter = router({
                     clientName,
                     phone,
                     email,
-                    service
-                }
+                    service: {
+                        create: {
+                            name: service,
+                            price: 70.55
+                        }
+                    }
+                },
+
+
             })
             return { success: true, message: "Horário agendado com sucesso." }
         }
-
-
-
-
 
     }),
 
@@ -90,7 +108,11 @@ export const bookingRouter = router({
             })
         }
 
-        const dataClient = await db.client.findMany()
+        const dataClient = await db.client.findMany({
+            include: {
+                service: true
+            }
+        })
 
         return dataClient
     })
