@@ -5,7 +5,6 @@ import superjson from "superjson";
 import { ZodError } from "zod";
 
 import { db } from "@/server/db";
-import { middleware } from "@/middleware";
 import { verifyAuth } from "@/lib/auth";
 
 /**
@@ -16,14 +15,6 @@ import { verifyAuth } from "@/lib/auth";
  * These allow you to access things when processing a request, like the database, the session, etc.
  */
 
-type CreateContextOptions = Record<string, never>;
-
-
-const createInnerTRPCContext = (_opts: CreateContextOptions) => {
-  return {
-    db,
-  };
-};
 
 export const createTRPCContext = (_opts: CreateNextContextOptions) => {
   const { res, req } = _opts
