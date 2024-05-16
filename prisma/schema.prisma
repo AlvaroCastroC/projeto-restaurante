@@ -44,10 +44,18 @@ model ClosedDay {
 }
 
 model Client {
-    id          Int      @id @default(autoincrement())
+    id          Int       @id @default(autoincrement())
     bookingDate DateTime
     clientName  String
     phone       String
-    email       String   @unique
-    service     String
+    email       String    @unique
+    service     Services?
+}
+
+model Services {
+    id       Int    @id @default(autoincrement())
+    name     String
+    price    Float
+    clientId Int    @unique
+    client   Client @relation(fields: [clientId], references: [id])
 }
