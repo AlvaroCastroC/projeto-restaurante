@@ -1,6 +1,6 @@
 function Footer() {
     return (
-        <footer className="w-[100%] bg-[#87888ac5]">
+        <footer className="w-[100%] ">
             <div className="MAX-CONTAINER px-6 m-auto gap-3">
                 <div className="flex items-center justify-between  h-[150px]">
                     <ul>
