@@ -286,8 +286,8 @@ export const adminRouter = router({
 
 
 
-    })
+    }),
 
-})
+});
 
 

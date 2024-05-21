@@ -49,13 +49,9 @@ export const schemaResetPassword = z.object({
     message: 'As senhas não são parecidas'
 })
 
-
-const services = ["option1", "option2", "option3"] as const
-
-
 export const schemaFormClient = z.object({
     email: z.string().email("Insira um e-mail válido."),
     name: z.string().min(3, "Informe seu nome completo").regex(regexNameValidation, { message: "O nome não pode conter números" }),
     phone: z.string().regex(regexPhoneValidation, { message: "Número de celular inválido!" }),
-    service: z.enum(services, { message: "Por favor insira um serviço" })
+    service: z.string(),
 })

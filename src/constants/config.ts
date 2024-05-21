@@ -6,4 +6,6 @@ export const START_WORKING_HOURS = 6
 export const END_WORKING_HOURS = 21
 export const FIXED_LENGTH_SERVICE = 45
 
-export const now = new Date() 
+export const now = new Date()
+
+export const NUMERO_FUNCIONARIO = 3
