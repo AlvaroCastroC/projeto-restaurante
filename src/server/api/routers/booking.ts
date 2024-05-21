@@ -85,11 +85,15 @@ export const bookingRouter = router({
                         name: service,
                         price,
                         client: {
+
                             connect: {
-                                id: isExistClient.id
-                            }
+                                id: isExistClient.id,
+
+                            },
+
                         }
-                    }
+                    },
+
 
                 })
                 return { success: true, message: "Horário marcado com sucesso." }
