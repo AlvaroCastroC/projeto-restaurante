@@ -24,7 +24,7 @@ model User {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    @@map("usuarios")
+    @@map("admin")
 }
 
 model Day {
@@ -44,18 +44,29 @@ model ClosedDay {
 }
 
 model Client {
-    id          Int       @id @default(autoincrement())
-    bookingDate DateTime
-    clientName  String
-    phone       String
-    email       String    @unique
-    service     Services?
+    id         String     @id @default(uuid())
+    clientName String
+    phone      String
+    email      String
+    service    Services[]
 }
 
 model Services {
-    id       Int    @id @default(autoincrement())
-    name     String
-    price    Float
-    clientId Int    @unique
-    client   Client @relation(fields: [clientId], references: [id])
+    id          Int      @id @default(autoincrement())
+    name        String
+    price       Float
+    bookingDate DateTime
+
+    clientid String?
+
+    client Client? @relation(fields: [clientid], references: [id], onDelete: Cascade)
+}
+
+model AllServices {
+    id    String @id @default(uuid())
+    name  String
+    price Float
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
