@@ -44,5 +44,34 @@ export const dashboardRouter = router({
                 id
             }
         })
+    }),
+
+    serviceDelelete: adminProcedure.input(z.object({
+        id: z.number()
+    })).mutation(async ({ ctx, input }) => {
+        const { id } = input
+        const { db } = ctx
+
+
+
+        if (!db.$connect()) throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Erro no servidor, tente mais tarde!"
+        })
+
+        try {
+            await db.services.delete({
+                where: {
+                    id
+                }
+            })
+
+        } catch (error) {
+            throw new TRPCError({
+                code: "NOT_FOUND",
+                message: "Serviço do cliente não encontrado"
+            })
+        }
+
     })
 })
