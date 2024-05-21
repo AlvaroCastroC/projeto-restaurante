@@ -1,10 +1,10 @@
 import { type FC, useState, } from "react";
 import { format, formatISO, isBefore, parse } from "date-fns";
-import { INTERVALO, now } from "@/constants/config";
-import { Day } from '@prisma/client'
-import type { DateTime } from 'src/utils/types'
-import { getOpeningTimes, roundToNearestMinutes } from "@/utils/helper";
-import { ptBR } from "date-fns/locale/pt-BR"
+import { INTERVALO, NUMERO_FUNCIONARIO, now } from "@/constants/config";
+import { Day } from '@prisma/client';
+import type { DateTime } from 'src/utils/types';
+import { capitalize, getOpeningTimes, roundToNearestMinutes } from "@/utils/helper";
+import { ptBR } from "date-fns/locale/pt-BR";
 import dynamic from "next/dynamic";
 import { toast } from "react-toastify";
 import { HiOutlineLogin } from "react-icons/hi";
@@ -15,9 +15,10 @@ import { z } from "zod";
 import InputMask from "react-input-mask";
 import { AnimatePresence, motion } from "framer-motion";
 import Modal from "./Modal";
-import { CalendarIcon } from "@chakra-ui/icons";
-import { Button, Drawer, DrawerOverlay, DrawerContent, DrawerCloseButton, DrawerHeader, DrawerBody, DrawerFooter, useDisclosure, Avatar, Stack, Tbody, Table, TableCaption, TableContainer, Td, Th, Thead, Tr, ScaleFade, Select } from "@chakra-ui/react";
+import { CalendarIcon, DeleteIcon } from "@chakra-ui/icons";
+import { Button, Drawer, DrawerOverlay, DrawerContent, DrawerCloseButton, DrawerHeader, DrawerBody, DrawerFooter, useDisclosure, Avatar, Stack, Tbody, Table, TableCaption, TableContainer, Td, Th, Thead, Tr, ScaleFade, Select, IconButton } from "@chakra-ui/react";
 import { api } from "@/utils/api";
+import { notifyError } from "@/models/toastifyUse";
 
 const DynamicCalendar = dynamic(() => import('react-calendar'), { ssr: false })
 
@@ -38,7 +39,12 @@ const clientPropsConst = {
     email: "",
     name: "",
     phone: "",
-    service: ""
+    service: "",
+}
+
+const dateType = {
+    justDate: null,
+    dateTime: null,
 }
 
 const CalendarComponent: FC<CalendarProps> = ({ days, closedDays, }, { isVisible }) => {
@@ -54,26 +60,39 @@ const CalendarComponent: FC<CalendarProps> = ({ days, closedDays, }, { isVisible
 
     }
 
-    const [date, setDate] = useState<DateTime>({
-        justDate: null,
-        dateTime: null,
-    })
+    const { isOpen, onClose, onOpen } = useDisclosure()
+    const [deleteSubmit, setDeleteSubmit] = useState<boolean>(false)
 
+    const [date, setDate] = useState<DateTime>(dateType)
     const [value, setValue] = useState<clientProps>(clientPropsConst)
-
-
     const [openTimeCalendar, setOpenTimeCalendar] = useState<boolean>(false)
     const [isOpenModal, setIsOpenModal] = useState<boolean>(false)
 
 
 
-    const notifyWarning = () => {
-        toast.warning("Por favor, nos envie o formulário primeiro para prosseguir!", {
-            position: "top-center"
-        });
+    const notifyWarning = () => toast.warning("Por favor, nos envie o formulário primeiro para prosseguir!", {
+        position: "top-center"
+    });
 
-    }
-    const { isOpen, onClose, onOpen } = useDisclosure()
+
+    const { data: dataClient, refetch } = api.booking.bookingQuery.useQuery()
+    const { data: services } = api.booking.allServiceQuery.useQuery()
+
+    const client = dataClient?.find(e => e.email === value.email)
+
+
+    const { mutate: bookingDelete } = api.booking.serviceDelelete.useMutation({
+        onSuccess: () => {
+            // router.push('/menu')
+            setTimeout(refetch, 2000)
+            setTimeout(setDeleteSubmit, 2000)
+        },
+
+        onError(erro) {
+            notifyError(erro.message)
+
+        },
+    })
 
 
     const handleSubmitBooking = (time: any) => {
@@ -99,20 +118,23 @@ const CalendarComponent: FC<CalendarProps> = ({ days, closedDays, }, { isVisible
 
     }
 
-    const { data: dataClient, } = api.booking.bookingQuery.useQuery()
+
 
 
     const times = date.justDate && getOpeningTimes(date.justDate, days,)
-
-
-
     // Retorna os horários disponíveis
     const returnHoursAvailabe = (time: string | Date, i: number) => {
 
 
         if (!!dataClient) {
-            return dataClient.find((d) => format(d.bookingDate, "d MMMM HH:mm") === format(time, "d MMMM HH:mm")) ?
+            var countBooking = dataClient.filter(x => x.service.find(e => format(e.bookingDate, "d MMMM HH:mm") === format(time, "d MMMM HH:mm"))).length
+
+            const existeBooking = dataClient.find((d) => d.service.find(e => format(e.bookingDate, "d MMMM HH:mm") === format(time, "d MMMM HH:mm")))
+
+
+            return existeBooking && countBooking >= NUMERO_FUNCIONARIO ?
                 (
+
 
 
                     <div className='w-[60px] flex justify-center items-center rounded-md bg-red-400 p-2 cursor-not-allowed transition ease-in-out duration-300 ' key={`time-${i}`}>
@@ -122,11 +144,14 @@ const CalendarComponent: FC<CalendarProps> = ({ days, closedDays, }, { isVisible
 
                     </div>
 
+
                 )
 
                 :
 
                 (
+
+
                     <div className='w-[60px] flex justify-center items-center rounded-md hover:shadow-[inset_-2px_3px_4px_1px_rgba(0,0,0,0.5)] hover:bg-[#cdf9ff23] hover:text-[0.95rem] p-2 cursor-pointer transition ease-in-out duration-300 ' key={`time-${i}`}>
                         <button onClick={() => { handleSubmitBooking(time) }} type='button'>
                             {format(time, "kk:mm")}
@@ -149,14 +174,13 @@ const CalendarComponent: FC<CalendarProps> = ({ days, closedDays, }, { isVisible
         resolver: zodResolver(schemaFormClient)
     })
 
-    const client = dataClient?.find(e => e.email === value.email)
 
 
     return (
         <section className="relative MAX-CONTAINER flex min-h-[90vh] items-center justify-center py-12 px-4 sm:px-6 lg:px-8-10 ">
             {
                 !openTimeCalendar ? (
-                    <div className="absolute top-10 -left-4">
+                    <div className="absolute top-0 -left-4">
                         <Button leftIcon={<HiOutlineLogin />} colorScheme='teal' onClick={onOpen}>
                             Cadastrar
                         </Button>
@@ -169,7 +193,7 @@ const CalendarComponent: FC<CalendarProps> = ({ days, closedDays, }, { isVisible
                         >
                             <DrawerOverlay />
 
-                            <DrawerContent className="overflow-scroll">
+                            <DrawerContent className="drawerContent">
                                 <ScaleFade initialScale={0.9} in={isOpen}>
                                     <DrawerCloseButton />
                                     <DrawerHeader className="mt-11">
@@ -242,10 +266,18 @@ const CalendarComponent: FC<CalendarProps> = ({ days, closedDays, }, { isVisible
                                                 }
                                                 <Select placeholder='Selecione um dos serviços'
                                                     {...register("service")}
+                                                    required
                                                 >
-                                                    <option value='option1'>Serviço 1</option>
-                                                    <option value='option2'>Serviço 2</option>
-                                                    <option value='option3'>Serviço 3</option>
+                                                    {
+                                                        services?.map((s, index) => (
+                                                            <option key={index} value={s.name}
+                                                            >
+                                                                {capitalize(s.name)}
+                                                                <span> R${s.price.toFixed(2).replace(".", ",")}
+                                                                </span>
+                                                            </option>
+                                                        ))
+                                                    }
                                                 </Select>
                                                 {errors.service &&
                                                     <motion.span
@@ -262,7 +294,7 @@ const CalendarComponent: FC<CalendarProps> = ({ days, closedDays, }, { isVisible
                                                     Cancelar
                                                 </Button>
 
-                                                <Button colorScheme="teal" type="submit"
+                                                <Button colorScheme="green" type="submit"
                                                 >Salvar</Button>
 
 
@@ -279,7 +311,7 @@ const CalendarComponent: FC<CalendarProps> = ({ days, closedDays, }, { isVisible
                         </Drawer>
                     </div>
                 ) : (
-                    <div className="absolute top-10 -left-4">
+                    <div className="absolute top-0 -left-4">
 
                         <Button leftIcon={<CalendarIcon />} colorScheme='teal' onClick={onOpen}>
                             Verificar horários
@@ -292,7 +324,7 @@ const CalendarComponent: FC<CalendarProps> = ({ days, closedDays, }, { isVisible
                             size={"md"}
                         >
                             <DrawerOverlay />
-                            <DrawerContent >
+                            <DrawerContent className="drawerContent">
                                 <DrawerCloseButton />
                                 <ScaleFade initialScale={0.9} in={isOpen}>
                                     <DrawerHeader >
@@ -303,7 +335,7 @@ const CalendarComponent: FC<CalendarProps> = ({ days, closedDays, }, { isVisible
                                     </DrawerHeader>
 
                                     <DrawerBody >
-                                        <Stack flex={"flex"} justifyItems={"center"} alignItems={"center"} >
+                                        <Stack flex={"flex"} justifyItems={"center"} alignItems={"center"} marginBottom={"10"}>
                                             <div>
                                                 <h2 className='mt-6 text-center text-3xl font-bold '>Ola, {value.name.split(" ", 1)}</h2>
                                                 <p>Dê uma olhada no seus horários:</p>
@@ -315,22 +347,38 @@ const CalendarComponent: FC<CalendarProps> = ({ days, closedDays, }, { isVisible
                                                     {!dataClient?.find(e => e.email === value.email) && <TableCaption>Sem horários agendados</TableCaption>}
                                                     {dataClient?.find(e => e.email === value.email) && <TableCaption>Horários agendados</TableCaption>}
                                                     <Thead >
-                                                        <Tr>
+                                                        <Tr><Th></Th>
                                                             <Th>Dia</Th>
                                                             <Th>Mês</Th>
                                                             <Th>Hora</Th>
-                                                            <Th>Serviço</Th>
+                                                            <Th>tipo de serviço</Th>
+                                                            <Th>Valor do serviço</Th>
                                                         </Tr>
                                                     </Thead>
                                                     <Tbody>
 
                                                         {
-                                                            dataClient?.find(e => e.email === value.email) && <Tr>
-                                                                <Td>{!!client && format(client?.bookingDate.toString(), "d")}</Td>
-                                                                <Td className="capitalize">{!!client && format(client?.bookingDate.toString(), "MMMM", { locale: ptBR })}</Td>
-                                                                <Td >{!!client && format(client?.bookingDate.toString(), "HH:mm")} </Td>
-                                                                <Td >{!!client && client.service} </Td>
-                                                            </Tr>
+                                                            client && client?.service.map((e) => (
+                                                                <Tr >
+                                                                    <Td>
+                                                                        <Button variant="unstyled" size={"sm"} isDisabled={deleteSubmit}
+                                                                            onClick={() => {
+                                                                                bookingDelete({ id: e.id })
+                                                                                setDeleteSubmit(true)
+                                                                            }}>
+                                                                            {
+                                                                                <IconButton size={"sm"} variant={"unstyled"} aria-label='Deletar horário' icon={<DeleteIcon />} />
+                                                                            }
+                                                                        </Button>
+                                                                    </Td>
+                                                                    <Td>{format(e.bookingDate.toString(), "d")}</Td>
+                                                                    <Td className="capitalize">{format(e.bookingDate.toString(), "MMMM", { locale: ptBR })}</Td>
+                                                                    <Td >{format(e.bookingDate.toString(), "HH:mm")} </Td>
+                                                                    <Td >{capitalize(e.name)} </Td>
+                                                                    <Td >R$ {e.price.toFixed(2).replace(".", ",")} </Td>
+
+                                                                </Tr>
+                                                            ))
                                                         }
 
                                                     </Tbody>
@@ -341,17 +389,17 @@ const CalendarComponent: FC<CalendarProps> = ({ days, closedDays, }, { isVisible
 
                                     </DrawerBody>
                                     <DrawerFooter gap={"6px"}>
-                                        <Button colorScheme="orange" onClick={() => {
+                                        <Button colorScheme="red" onClick={onClose}>
+                                            Fechar
+                                        </Button>
+                                        <Button onClick={() => {
                                             setOpenTimeCalendar(false)
-                                            setValue({ email: "", name: "", phone: "", service: "" })
+                                            setValue(clientPropsConst)
                                             reset()
 
 
                                         }}>
-                                            fazer um novo cadastro
-                                        </Button>
-                                        <Button colorScheme="teal" onClick={onClose}>
-                                            Fechar
+                                            Fazer um novo cadastro
                                         </Button>
                                     </DrawerFooter>
                                 </ScaleFade>
