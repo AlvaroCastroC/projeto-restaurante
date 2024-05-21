@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { notifyError } from '@/models/toastifyUse'
 import { useRouter } from 'next/router'
+import { Box, Button, Checkbox, FormControl, FormHelperText, Input, Container, Flex } from '@chakra-ui/react'
 
 const Login: FC = () => {
 
@@ -30,7 +31,7 @@ const Login: FC = () => {
 
     type FormDataProps = z.infer<typeof schemaLogin>
 
-    const { handleSubmit, register, formState: { errors }, setValue } = useForm<FormDataProps>({
+    const { handleSubmit, register, formState: { errors, }, setValue } = useForm<FormDataProps>({
         mode: 'all',
         reValidateMode: 'onChange',
         resolver: zodResolver(schemaLogin),
@@ -78,8 +79,15 @@ const Login: FC = () => {
 
 
     return (
-        <section className='flex min-h-[90vh] items-center justify-center py-12 px-4 sm:px-6 lg:px-8'>
-            <div className='w-full max-w-md space-y-8 hover:shadow-[0_20px_50px_-5px_rgba(0,0,0,0.2)]  py-12 px-7 rounded-md transition ease-in-out duration-700'>
+        <section className='flex min-h-[90vh] items-center justify-center py-12 sm:px-6 lg:px-8'>
+            <Container className='px-7  transition ease-in-out duration-700'
+                py={"12"}
+                px={"7"}
+                borderRadius={"6"}
+                _hover={{
+                    boxShadow: "0 20px 50px 5px rgba(0,0,0,0.2)",
+                    backgroundColor: "white"
+                }}  >
                 <div>
                     <img
                         className='mx-auto h-12 w-auto'
@@ -96,62 +104,65 @@ const Login: FC = () => {
                 </div>
                 <form className='mt-8 space-y-6' onSubmit={handleSubmit(handleSubmitForm)}>
 
-                    <input type='hidden' name='remember' defaultValue='true' />
+                    <FormControl >
+                        <Flex direction={"column"} alignItems={"center"} gap={"2"}>
 
-                    <div className='-space-y-px rounded-md shadow-sm'>
-                        <div>
-                            <label htmlFor='email-address' className='sr-only'>
-                                Email address
-                            </label>
+                            <div className='w-[288px]'>
 
-                            <input
-                                id='email-address'
-                                type='email'
+                                <Input
+                                    id='email-address'
+                                    type='email'
+                                    className='relative block w-full appearance-none  rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
+                                    {...register('email')}
+                                    placeholder='Endereço de E-mail'
+                                />
 
-                                {...register('email')}
-
-                                className='relative block w-full appearance-none  rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
-                                placeholder='Endereço de E-mail'
-                            />
-
-                            {errors.email && <span className="span-form">{errors.email.message}</span>}
-
-                        </div>
+                                {errors.email && <FormHelperText color={"red.400"} marginLeft={"12px"} > {errors.email.message} </FormHelperText>}
+                            </div>
 
 
-                        <div>
-                            <label htmlFor='password' className='sr-only'>
-                                Password
-                            </label>
 
-                            <input
-                                id='password'
-                                type='password'
 
-                                {...register('password')}
 
-                                autoComplete='current-password'
-                                className='relative block w-full appearance-none  rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
-                                placeholder='Senha'
-                            />
 
-                            {errors.password && <span className="span-form">{errors.password.message}</span>}
-                        </div>
-                    </div>
+                            <div className='w-[288px]'>
+                                <Input
+                                    id='password'
+                                    type='password'
+
+                                    {...register('password')}
+
+                                    autoComplete='current-password'
+                                    className='relative block w-full appearance-none  rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
+                                    placeholder='Senha'
+                                />
+                                {errors.password && <FormHelperText
+                                    color={"red.400"} marginLeft={"12px"}
+                                > {errors.password.message}
+                                </FormHelperText>}
+                            </div>
+
+                        </Flex>
+                    </FormControl>
+
+
+
+
+
 
                     <div className='flex items-center justify-between'>
-                        <div className='flex items-center'>
-                            <input
+                        <Box className='flex items-center justify-center'>
+                            <Checkbox
                                 id='remember-me'
 
                                 {...register('role')}
                                 type='checkbox'
-                                className='h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
-                            />
-                            <label htmlFor='remember-me' className='ml-2 block text-sm text-gray-900'>
+                                className=' rounded border-gray-300 text-indigo-600 focus:ring-indigo-500'
+                            >
                                 Lembrar de mim
-                            </label>
-                        </div>
+                            </Checkbox>
+
+                        </Box>
 
                         <div className='text-sm'>
                             <Link href='/forgotPassword' className='font-medium text-indigo-600 hover:text-indigo-500'>
@@ -161,7 +172,7 @@ const Login: FC = () => {
                     </div>
 
                     <div>
-                        <button
+                        <Button
                             type='submit'
 
                             className='group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2'>
@@ -172,10 +183,10 @@ const Login: FC = () => {
                                 />
                             </span>
                             Sign in
-                        </button>
+                        </Button>
                     </div>
                 </form>
-            </div>
+            </Container>
         </section>
     )
 }
