@@ -2,7 +2,7 @@ import type { Day } from '@prisma/client'
 import { add, addMinutes, getHours, getMinutes, isBefore, isEqual, parse } from 'date-fns'
 import { now, INTERVALO } from 'src/constants/config'
 
-export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+export const capitalize = (s: string) => s !== undefined && s.charAt(0).toUpperCase() + s.slice(1)
 
 
 
