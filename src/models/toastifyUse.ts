@@ -10,7 +10,7 @@ export const notifyError = (message: string) => {
 
 export const notifySuccess = (e: string | undefined) => {
     toast.success(e, {
-        position: "top-center"
+        position: "top-center",
     });
 
 }
