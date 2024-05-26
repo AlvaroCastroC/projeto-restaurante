@@ -13,7 +13,6 @@ export const schemaRegister = z.object({
     phone: z.string().regex(regexPhoneValidation, { message: "Número de celular inválido" }),
     password: z.string().min(6, "A senha precisa ter mais de 5 caracteres."),
     confirmPassword: z.string(),
-    role: z.string(),
 }).refine((fields) => fields.password == fields.confirmPassword, {
     path: ['confirmPassword'],
     message: 'As senhas não são parecidas'
@@ -55,3 +54,12 @@ export const schemaFormClient = z.object({
     phone: z.string().regex(regexPhoneValidation, { message: "Número de celular inválido!" }),
     service: z.string(),
 })
+
+
+export const schemaService = z.object({
+    service: z.string().min(3, { message: "Por favor, digite algum tipo de serviços" }),
+    price: z.string().min(1, { message: "Digite o preço do serviço" }).regex(/^[+-]?([0-9]*[.|,])?[0-9]+$/, { message: "Valor inválido" }),
+    id: z.string().optional()
+
+})
+
