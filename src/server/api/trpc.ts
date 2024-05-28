@@ -5,7 +5,7 @@ import superjson from "superjson";
 import { ZodError } from "zod";
 
 import { db } from "@/server/db";
-import { verifyAuth } from "@/lib/auth";
+import { verifyAuthAdmin } from "@/lib/auth";
 
 /**
  * 1. CONTEXT
@@ -42,19 +42,19 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
 export const createCallerFactory = t.createCallerFactory;
 
 
-
 export const isAdmin = t.middleware(async ({ ctx, next }) => {
   const { req } = ctx
-  const token = req.cookies['user-Token']
+  const token = req.cookies['user-Token-admin']
 
   if (!token) {
-    throw new TRPCError({ code: 'UNAUTHORIZED', message: "Missing user Token" })
+
+    throw new TRPCError({ code: 'UNAUTHORIZED', message: "Token inexistente, recaregue a página para adiquirir o token novamente." })
   }
 
-  const verifiedToken = await verifyAuth(token)
+  const verifiedToken = await verifyAuthAdmin(token)
 
   if (!verifiedToken) {
-    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid user Token' })
+    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Token inválido' })
   }
 
   return next()

@@ -6,21 +6,31 @@ import { useForm } from 'react-hook-form'
 import { schemaLogin } from '@/models/userSchemaValidation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { notifyError } from '@/models/toastifyUse'
+import { notifyError, notifySuccess } from '@/models/toastifyUse'
 import { useRouter } from 'next/router'
 import { Box, Button, Checkbox, FormControl, FormHelperText, Input, Container, Flex } from '@chakra-ui/react'
 
-const Login: FC = () => {
+interface loginProps {
+    cookiesClient: boolean
+}
+
+const Login: FC<loginProps> = ({ cookiesClient }) => {
 
     const router = useRouter()
 
 
-    const redirect = () => router.push('/dashboard')
 
 
-    const { mutate: login, } = api.admin.login.useMutation({
-        onSuccess: () => {
-            setTimeout(redirect, 3000)
+    const { mutate: login, } = api.createUser.login.useMutation({
+        onSuccess: (e) => {
+            notifySuccess(e!.message)
+            if (cookiesClient) {
+                setTimeout(() => router.push('/booking'), 3000)
+
+            } else {
+                setTimeout(() => router.push('/booking'), 3000)
+
+            }
 
         },
         onError(erro) {
@@ -50,6 +60,7 @@ const Login: FC = () => {
                     password,
                 })
 
+
                 return true
             }
         }
@@ -58,6 +69,7 @@ const Login: FC = () => {
                 email,
                 password,
             })
+            sessionStorage.setItem("user-data", email);
 
             return true
         }
@@ -190,5 +202,6 @@ const Login: FC = () => {
         </section>
     )
 }
+
 
 export default Login

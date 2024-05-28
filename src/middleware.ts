@@ -1,31 +1,55 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAuth } from "./lib/auth";
+import { verifyAuthAdmin, verifyAuthClient } from "./lib/auth";
 
 export async function middleware(req: NextRequest) {
     // pegará o token do usuario
 
-    const token = req.cookies.get('user-Token')?.value
+    const tokenAdmin = req.cookies.get('user-Token-admin')?.value
+    const tokenClient = req.cookies.get('user-Token-client')?.value
 
     // validará se o usuario ta autenticado
-    const verifyToken = token && (await verifyAuth(token).catch((err) => {
+    const verifyTokenAdmin = tokenAdmin && (await verifyAuthAdmin(tokenAdmin).catch((err) => {
         console.error(err.message)
     }))
 
-    if (req.nextUrl.pathname.startsWith('/login') && !verifyToken) {
+
+    // validará se o usuario ta autenticado
+    const verifyTokenClient = tokenClient && (await verifyAuthClient(tokenClient).catch((err) => {
+        console.error(err.message)
+    }))
+
+
+    if (req.nextUrl.pathname.startsWith('/login') && !verifyTokenAdmin) {
         return
     }
 
+
     const url = req.url
 
-    if (url.includes('/login') && verifyToken) {
+    if (url.includes('/login') && verifyTokenAdmin) {
         return NextResponse.redirect(new URL('/dashboard', req.url))
     }
 
-    if (!verifyToken) {
+    if (url.includes('/booking')) {
+        if (verifyTokenClient) {
+
+            return NextResponse.next()
+
+        } else {
+            return NextResponse.redirect(new URL('/login', req.url))
+
+        }
+    }
+
+    if (!verifyTokenAdmin) {
         return NextResponse.redirect(new URL('/login', req.url))
     }
+
 }
 
+
 export const config = {
-    matcher: ['/dashboard/:path*', '/login'],
+    matcher: ['/dashboard/:path*', '/login', '/booking',],
 }
+
+
