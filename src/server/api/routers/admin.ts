@@ -2,7 +2,7 @@ import { z } from "zod";
 import { publicProcedure, router } from "../trpc";
 import { SignJWT } from "jose";
 import { nanoid } from "nanoid";
-import { getJwtSecretKey } from "@/lib/auth";
+import { getJwtSecretKeyAdmin, getJwtSecretKeyClient } from "@/lib/auth";
 import cookie from "cookie";
 import { TRPCError } from "@trpc/server";
 import { Prisma } from "@prisma/client";
@@ -15,7 +15,7 @@ import { addMinutes, format } from "date-fns";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 
-export const adminRouter = router({
+export const CreateUser = router({
 
 
 
@@ -36,8 +36,17 @@ export const adminRouter = router({
             })
 
 
+            if (email === process.env.ADMIN_EMAIL, password === process.env.ADMIN_PASSWORD) {
 
-            if (dataUserDB) {
+                const token = await new SignJWT({}).setProtectedHeader({ alg: 'HS256' }).setJti(nanoid()).setIssuedAt().setExpirationTime('1h').sign(new TextEncoder().encode(getJwtSecretKeyAdmin()))
+
+                res.setHeader('Set-Cookie', cookie.serialize('user-Token-admin', token, {
+                    httpOnly: true,
+                    path: '/',
+                    secure: process.env.NODE_ENV === "production"
+                }))
+
+            } else if (dataUserDB && dataUserDB.role === "user") {
                 // Autenticação do usuário como admin
                 const senhaHashed = await bcrypt.compare(password, dataUserDB.password)
 
@@ -45,15 +54,15 @@ export const adminRouter = router({
 
                 if (senhaHashed) {
 
-                    const token = await new SignJWT({}).setProtectedHeader({ alg: 'HS256' }).setJti(nanoid()).setIssuedAt().setExpirationTime('1h').sign(new TextEncoder().encode(getJwtSecretKey()))
+                    const token = await new SignJWT({}).setProtectedHeader({ alg: 'HS256' }).setJti(nanoid()).setIssuedAt().setExpirationTime('1h').sign(new TextEncoder().encode(getJwtSecretKeyClient()))
 
-                    res.setHeader('Set-Cookie', cookie.serialize('user-Token', token, {
-                        httpOnly: true,
+                    res.setHeader('Set-Cookie', cookie.serialize('user-Token-client', token, {
+                        httpOnly: false,
                         path: '/',
                         secure: process.env.NODE_ENV === "production"
                     }))
 
-                    return { success: true }
+                    return { success: true, message: "Logado com sucesso" }
 
                 } else {
                     throw new TRPCError({
@@ -64,6 +73,17 @@ export const adminRouter = router({
 
 
 
+            } else if (dataUserDB && dataUserDB.role === "admin") {
+
+                const token = await new SignJWT({}).setProtectedHeader({ alg: 'HS256' }).setJti(nanoid()).setIssuedAt().setExpirationTime('1h').sign(new TextEncoder().encode(getJwtSecretKeyAdmin()))
+
+                res.setHeader('Set-Cookie', cookie.serialize('user-Token-admin', token, {
+                    httpOnly: false,
+                    path: '/',
+                    secure: process.env.NODE_ENV === "production"
+                }))
+
+                return { success: true, message: "Logado com sucesso" }
             } else {
                 throw new TRPCError({
                     code: "UNAUTHORIZED",
@@ -82,12 +102,11 @@ export const adminRouter = router({
             email: z.string(),
             password: z.string(),
             phone: z.string(),
-            role: z.string(),
 
         })
     ).mutation(async ({ ctx, input }) => {
         const { db } = ctx
-        const { firstName, secondName, email, password, phone, role } = input
+        const { firstName, secondName, email, password, phone } = input
 
         const salt = await bcrypt.genSalt(10)
         const hashaedPassword = await bcrypt.hash(password, salt)
@@ -101,37 +120,81 @@ export const adminRouter = router({
             })
 
         else
-            if (role === process.env.ROLE) {
-                try {
-                    await db.user.create({
-                        data: {
-                            firstName,
-                            secondName,
-                            email,
-                            password: hashaedPassword,
-                            phone,
-                        },
-                    })
-                } catch (error) {
-                    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-                        throw new TRPCError({
-                            code: "UNAUTHORIZED",
-                            message: "E-mail já existe"
-                        })
-                    }
 
-                }
-                return { success: true }
-            } else {
-                throw new TRPCError({
-                    code: "NOT_FOUND",
-                    message: "Código não é válido"
+            try {
+                await db.user.create({
+                    data: {
+                        firstName,
+                        secondName,
+                        email,
+                        password: hashaedPassword,
+                        phone,
+                    },
                 })
+
+                return { success: true, message: "Cadastro criado com sucesso." }
+
+            } catch (error) {
+                if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                    throw new TRPCError({
+                        code: "UNAUTHORIZED",
+                        message: "E-mail já existe"
+                    })
+                }
+
             }
 
+    }),
 
 
+    registerAdmin: publicProcedure.input(
+        z.object({
 
+            firstName: z.string(),
+            secondName: z.string(),
+            email: z.string(),
+            password: z.string(),
+            phone: z.string(),
+
+        })
+    ).mutation(async ({ ctx, input }) => {
+        const { db } = ctx
+        const { firstName, secondName, email, password, phone } = input
+
+        const salt = await bcrypt.genSalt(10)
+        const hashaedPassword = await bcrypt.hash(password, salt)
+
+
+        if (!(db.$connect))
+
+            throw new TRPCError({
+                code: 'INTERNAL_SERVER_ERROR',
+                message: 'Não foi possível se registrar , erro no servidor!!',
+            })
+
+        else
+
+            try {
+                await db.user.create({
+                    data: {
+                        firstName,
+                        secondName,
+                        email,
+                        password: hashaedPassword,
+                        phone,
+                        role: "admin"
+                    },
+                })
+                return { success: true, message: "Cadastro do admin criado." }
+            } catch (error) {
+                if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                    throw new TRPCError({
+                        code: "UNAUTHORIZED",
+                        message: "E-mail já existe"
+                    })
+                }
+
+            }
 
     }),
 
@@ -251,13 +314,6 @@ export const adminRouter = router({
                         return { success: true }
                     }
 
-                    // await db.user.update({
-                    //     where: { email },
-                    //     data: {
-                    //         passwordResetToken: null,
-                    //         passwordResetExpires: null,
-                    //     }
-                    // })
 
                     throw new TRPCError({
                         code: "UNAUTHORIZED",
