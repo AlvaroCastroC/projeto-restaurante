@@ -1,10 +1,15 @@
 import { FC } from "react";
 import Login from "@/components/Login";
 import Head from "next/head";
+import { parseCookies, } from 'nookies';
+import { NextPageContext } from "next";
+
+interface loginProps {
+    cookieClient: boolean
+}
 
 
-
-const login: FC = () => {
+const login: FC<loginProps> = ({ cookieClient }) => {
 
 
     return (
@@ -13,19 +18,25 @@ const login: FC = () => {
                 <title>Salão | Login</title>
             </Head>
 
-            <Login />
+            <Login cookiesClient={cookieClient} />
         </section>
     )
 
 }
 
-export async function getServerSideProps() {
+export async function getServerSideProps(ctx: NextPageContext) {
     await new Promise((resolve) => {
         setTimeout(resolve, 1000)
     })
 
-    return { props: {} }
+    const cookies = parseCookies(ctx)
+    if (cookies['user-Token-client']) {
 
+        return { props: { cookieClient: true } }
+    } else {
+
+        return { props: { cookieClient: false } }
+    }
 }
 
 export default login;

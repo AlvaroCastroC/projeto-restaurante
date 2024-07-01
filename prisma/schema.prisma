@@ -1,72 +1,97 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "mysql"
-    url      = env("DATABASE_URL")
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
-model User {
-    id         String @id @default(uuid())
-    firstName  String
-    secondName String
-    email      String @unique
-    password   String
-    phone      String @db.VarChar(11)
-
-    passwordResetToken   String? @db.VarChar(200)
-    passwordResetExpires String?
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    @@map("admin")
+model allservices {
+  id        String   @id @default(cuid())
+  service   String
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model Day {
-    id        String @id @default(cuid())
-    name      String // segunda, terça...
-    dayOfWeek Int // dia das semana que sera vista por indíces
-    openTime  String
-    closeTime String
-
-    initLanch String
-    endLanch  String
+model client {
+  id         String     @id @default(cuid())
+  clientName String
+  phone      String
+  email      String
+  services   services[]
 }
 
-model ClosedDay {
-    id   String   @id @default(cuid())
-    date DateTime @unique
+model closedday {
+  id   String   @id
+  date DateTime @unique(map: "ClosedDay_date_key")
 }
 
-model Client {
-    id         String     @id @default(uuid())
-    clientName String
-    phone      String
-    email      String
-    service    Services[]
+model day {
+  id        String @id @default(cuid())
+  name      String
+  dayOfWeek Int
+  openTime  String
+  closeTime String
+  initLanch String
+  endLanch  String
 }
 
-model Services {
-    id          Int      @id @default(autoincrement())
-    name        String
-    price       Float
-    bookingDate DateTime
+model Employees {
+  id       Int      @id @default(autoincrement())
+  name     String
+  imageKey String
+  initTime DateTime
 
-    clientid String?
+  category Category[]
+  services services[]
 
-    client Client? @relation(fields: [clientid], references: [id], onDelete: Cascade)
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model AllServices {
-    id    String @id @default(uuid())
-    name  String
-    price Float
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String
+  employeesId Int
+  employees   Employees @relation(fields: [employeesId], references: [id], onDelete: Cascade)
+}
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model services {
+  id          Int      @id @default(autoincrement())
+  service     String
+  price       Float
+  bookingDate DateTime
+  clientid    String?
+  client      client?  @relation(fields: [clientid], references: [id], onDelete: Cascade, map: "Services_clientid_fkey")
+
+  employeeId Int
+  employees  Employees @relation(fields: [employeeId], references: [id], map: "Services_employeeId_fkey")
+
+  // @@index([employeeId], map: "Services_employeeId_fkey")
+
+  @@index([clientid], map: "Services_clientid_fkey")
+}
+
+model user {
+  id                   String    @id @default(cuid())
+  firstName            String
+  secondName           String
+  email                String    @unique(map: "User_email_key")
+  password             String
+  phone                String    @db.VarChar(11)
+  imageKey             String
+  role                 user_role @default(user)
+  passwordResetToken   String?   @db.VarChar(200)
+  passwordResetExpires String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
+
+enum user_role {
+  admin
+  user
 }

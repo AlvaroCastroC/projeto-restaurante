@@ -49,9 +49,6 @@ export const schemaResetPassword = z.object({
 })
 
 export const schemaFormClient = z.object({
-    email: z.string().email("Insira um e-mail válido."),
-    name: z.string().min(3, "Informe seu nome completo").regex(regexNameValidation, { message: "O nome não pode conter números" }),
-    phone: z.string().regex(regexPhoneValidation, { message: "Número de celular inválido!" }),
     service: z.string(),
 })
 
@@ -62,4 +59,3 @@ export const schemaService = z.object({
     id: z.string().optional()
 
 })
-

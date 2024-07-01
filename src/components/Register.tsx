@@ -6,11 +6,15 @@ import Link from "next/link";
 import { api } from "@/utils/api";
 import { toast } from "react-toastify";
 import { schemaRegister } from "@/models/userSchemaValidation";
-import InputMask from "react-input-mask"
+import ReactInputMask from "react-input-mask"
 import { notifyError } from "@/models/toastifyUse";
 import { useRouter } from "next/router";
+import { destroyCookie } from "nookies";
 
-const register: FC = () => {
+interface Props {
+    role: 'admin' | 'user'
+}
+const register: FC<Props> = ({ role }) => {
     const router = useRouter()
 
 
@@ -33,10 +37,13 @@ const register: FC = () => {
     })
 
 
-    const { mutate: registerUser } = api.admin.registerUser.useMutation({
+    const { mutate: registerUser } = api.createUser.registerUser.useMutation({
         onSuccess: () => {
             notifySuccess()
-            setTimeout(redirect, 3000)
+            setTimeout(() => {
+                redirect(),
+                    destroyCookie(null, 'user-Token-admin')
+            }, 3000)
         },
 
         onError(erro) {
@@ -46,7 +53,7 @@ const register: FC = () => {
 
 
     const handleSubmitForm = (data: FormDataProps) => {
-        const { firstName, secondName, email, phone, password, role } = data
+        const { firstName, secondName, email, phone, password } = data
 
         registerUser({
             email,
@@ -54,9 +61,7 @@ const register: FC = () => {
             secondName,
             phone: phone.replace(/\D/g, ""),
             password,
-            role,
-
-
+            role: role
 
         })
     }
@@ -92,35 +97,40 @@ const register: FC = () => {
 
                         <div className="flex">
 
-                            <label htmlFor='name' className='sr-only'>
-                                Digite seu primeiro nome
-                            </label>
-                            <input
-                                id='name'
+                            <div>
+                                <label htmlFor='name' className='sr-only'>
+                                    Digite seu primeiro nome
+                                </label>
+                                <input
+                                    id='name'
 
-                                type="text"
+                                    type="text"
 
-                                {...register('firstName')}
+                                    {...register('firstName')}
 
-                                className='relative block w-full appearance-none rounded-md rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
-                                placeholder='Digite seu nome'
-                            />
-                            {errors.firstName && <span className="span-form">{errors.firstName.message}</span>}
+                                    className='relative block w-full appearance-none rounded-md rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
+                                    placeholder='Digite seu nome'
+                                />
+                                {errors.firstName && <span className="span-form">{errors.firstName.message}</span>}
+                            </div>
 
-                            <label htmlFor='name' className='sr-only'>
-                                Digite seu sobrenome
-                            </label>
-                            <input
-                                id='name'
+                            <div>
+                                <label htmlFor='name' className='sr-only'>
+                                    Digite seu sobrenome
+                                </label>
+                                <input
+                                    id='name'
 
-                                type="text"
+                                    type="text"
 
-                                {...register('secondName')}
+                                    {...register('secondName')}
 
-                                className='relative block w-full appearance-none rounded-md rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
-                                placeholder='Digite seu nome'
-                            />
-                            {errors.secondName && <span className="span-form">{errors.secondName.message}</span>}
+                                    className='relative block w-full appearance-none rounded-md rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
+                                    placeholder='Digite seu nome'
+                                />
+                                {errors.secondName && <span className="span-form">{errors.secondName.message}</span>}
+                            </div>
+
                         </div>
 
                         <div>
@@ -144,7 +154,7 @@ const register: FC = () => {
                             <label htmlFor='phone' className='sr-only'>
                                 Informe seu Número
                             </label>
-                            <InputMask
+                            <ReactInputMask
                                 className='relative block w-full appearance-none rounded-md  border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
 
                                 placeholder='Digite seu número de celular'
@@ -197,21 +207,7 @@ const register: FC = () => {
                             </div>
                         </div>
 
-                        <div>
-                            <label htmlFor='role' className='sr-only'>
-                                Informe o código
-                            </label>
-                            <input
-                                id='role'
-                                type='text'
-                                {...register('role')}
-                                className='relative block w-full appearance-none rounded-md rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
-                                placeholder='Digite o codigo de válidação'
-                            />
 
-                            {errors.role && <p className="span-form">{errors.role?.message}</p>}
-
-                        </div>
                     </div>
 
                     <div>
@@ -220,7 +216,7 @@ const register: FC = () => {
 
                             className='group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2'>
 
-                            Sign in
+                            Sign Up
                         </button>
                     </div>
                 </form>

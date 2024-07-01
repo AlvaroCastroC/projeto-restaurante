@@ -1,4 +1,4 @@
-import { FIXED_LENGTH_SERVICE, START_WORKING_HOURS, END_WORKING_HOURS } from '@/constants/config'
+import { INTERVALO, ARBERTURA, FECHAMENTO } from '@/constants/config'
 import { Listbox, Transition } from '@headlessui/react'
 import { type FC, Fragment } from 'react'
 import { HiCheck, HiSelector } from 'react-icons/hi'
@@ -19,20 +19,20 @@ const timeOptions: string[] = []
 
 /**
  * O valor será em horas
- * @example a variável i será identificada como a hora de abertura "START_WORKING_HOURS",
+ * @example a variável i será identificada como a hora de abertura "ARBERTURA",
  * verificando se é menor que o horário de fechamento "END_WORKINH_HOURS"
  * @returns retornará a soma de mais 1  hora caso for true
  */
 
-for (let i = START_WORKING_HOURS; i < END_WORKING_HOURS; i++) {
+for (let i = ARBERTURA; i < FECHAMENTO; i++) {
 
     /**
      * O valor será emminutos
-     * @example a variável j será identificada com o tempo pré-determinado dos serviços "FIXED_LENGTH_SERVICE",
+     * @example a variável j será identificada com o tempo pré-determinado dos serviços "INTERVALO",
      * verificando se é menor que 1hora em minutos
-     * @returns retornará a soma do tempo de servico pré-determinado "FIXED_LENGTH_SERVICE" caso for true
+     * @returns retornará a soma do tempo de servico pré-determinado "INTERVALO" caso for true
      */
-    for (let j = 0; j < 60; j += FIXED_LENGTH_SERVICE) {
+    for (let j = 0; j < 60; j += INTERVALO) {
         timeOptions.push(`${i.toString().padStart(2, '0')}:${j.toString().padStart(2, '0')}`)
 
     }
@@ -43,7 +43,7 @@ for (let i = START_WORKING_HOURS; i < END_WORKING_HOURS; i++) {
 const TimeSelector: FC<TimeSelectorProps> = ({ selected, changeTime, type }) => {
     // generate time options from 00:00 to 23:30
 
-    if (!selected) return <p>none selected</p>
+    if (!selected) return <p>Nada selecionado</p>
 
     // ensure this format 08:00 instead of 8:00
     if (type === 'openTime') selected = selected.padStart(5, '0')

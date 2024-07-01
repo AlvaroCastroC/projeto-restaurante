@@ -10,7 +10,7 @@ import * as bcrypt from 'bcrypt'
 import { Resend } from "resend";
 import { Email } from "@/components/email-template/email-template";
 import { NextResponse } from "next/server";
-import { addMinutes, format } from "date-fns";
+import { addMinutes, format, parseISO } from "date-fns";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -28,68 +28,93 @@ export const CreateUser = router({
 
             const { res, db } = ctx
             const { email, password, } = input
-            const dataUserDB = await db.user.findFirst({ where: { email } }).catch(() => {
-                throw new TRPCError({
-                    code: 'INTERNAL_SERVER_ERROR',
-                    message: 'Não foi possivel fazer o login, teste mais tarde!',
-                })
-            })
+            const dataUserDB = await db.user.findFirst({ where: { email } })
+            const isUserExists = await db.user.findMany()
 
 
             if (email === process.env.ADMIN_EMAIL, password === process.env.ADMIN_PASSWORD) {
 
-                const token = await new SignJWT({}).setProtectedHeader({ alg: 'HS256' }).setJti(nanoid()).setIssuedAt().setExpirationTime('1h').sign(new TextEncoder().encode(getJwtSecretKeyAdmin()))
+                if (!isUserExists.find(e => e.role === "admin")) {
+                    const token = await new SignJWT({ email: 'admin' }).setProtectedHeader({ alg: 'HS256' }).setJti(nanoid()).setIssuedAt().setExpirationTime('1h').sign(new TextEncoder().encode(getJwtSecretKeyAdmin()))
 
-                res.setHeader('Set-Cookie', cookie.serialize('user-Token-admin', token, {
-                    httpOnly: true,
-                    path: '/',
-                    secure: process.env.NODE_ENV === "production"
-                }))
-
-            } else if (dataUserDB && dataUserDB.role === "user") {
-                // Autenticação do usuário como admin
-                const senhaHashed = await bcrypt.compare(password, dataUserDB.password)
-
-
-
-                if (senhaHashed) {
-
-                    const token = await new SignJWT({}).setProtectedHeader({ alg: 'HS256' }).setJti(nanoid()).setIssuedAt().setExpirationTime('1h').sign(new TextEncoder().encode(getJwtSecretKeyClient()))
-
-                    res.setHeader('Set-Cookie', cookie.serialize('user-Token-client', token, {
+                    res.setHeader('Set-Cookie', cookie.serialize('user-Token-admin', token, {
                         httpOnly: false,
                         path: '/',
                         secure: process.env.NODE_ENV === "production"
                     }))
 
                     return { success: true, message: "Logado com sucesso" }
-
-                } else {
+                }
+                else {
                     throw new TRPCError({
                         code: "UNAUTHORIZED",
-                        message: "Senha inválida"
+                        message: "Conta não existe"
                     })
                 }
+            } else if (dataUserDB) {
+
+                if (dataUserDB.role === "user") {
+                    // Autenticação do usuário como admin
+                    const senhaHashed = await bcrypt.compare(password, dataUserDB.password)
 
 
 
-            } else if (dataUserDB && dataUserDB.role === "admin") {
+                    if (senhaHashed) {
 
-                const token = await new SignJWT({}).setProtectedHeader({ alg: 'HS256' }).setJti(nanoid()).setIssuedAt().setExpirationTime('1h').sign(new TextEncoder().encode(getJwtSecretKeyAdmin()))
+                        const token = await new SignJWT({ email: dataUserDB.email }).setProtectedHeader({ alg: 'HS256' }).setJti(nanoid()).setIssuedAt().setExpirationTime('1h').sign(new TextEncoder().encode(getJwtSecretKeyClient()))
 
-                res.setHeader('Set-Cookie', cookie.serialize('user-Token-admin', token, {
-                    httpOnly: false,
-                    path: '/',
-                    secure: process.env.NODE_ENV === "production"
-                }))
+                        res.setHeader('Set-Cookie', cookie.serialize('user-Token-client', token, {
+                            httpOnly: false,
+                            path: '/',
+                            secure: process.env.NODE_ENV === "production"
+                        }))
 
-                return { success: true, message: "Logado com sucesso" }
+                        return { success: true, message: "Logado com sucesso" }
+
+                    } else {
+                        throw new TRPCError({
+                            code: "UNAUTHORIZED",
+                            message: "Senha inválida"
+                        })
+                    }
+
+
+
+                }
+
+                if (dataUserDB.role === "admin") {
+
+                    const senhaHashed = await bcrypt.compare(password, dataUserDB.password)
+
+
+
+                    if (senhaHashed) {
+
+                        const token = await new SignJWT({ email: dataUserDB.email }).setProtectedHeader({ alg: 'HS256' }).setJti(nanoid()).setIssuedAt().setExpirationTime('1h').sign(new TextEncoder().encode(getJwtSecretKeyAdmin()))
+
+                        res.setHeader('Set-Cookie', cookie.serialize('user-Token-admin', token, {
+                            httpOnly: false,
+                            path: '/',
+                            secure: process.env.NODE_ENV === "production"
+                        }))
+
+                        return { success: true, message: "Logado com sucesso" }
+
+                    } else {
+                        throw new TRPCError({
+                            code: "UNAUTHORIZED",
+                            message: "Senha inválida"
+                        })
+                    }
+                }
             } else {
                 throw new TRPCError({
                     code: "UNAUTHORIZED",
-                    message: "Email inválido"
+                    message: "Conta não existe"
                 })
             }
+
+
 
         }),
 
@@ -99,70 +124,70 @@ export const CreateUser = router({
 
             firstName: z.string(),
             secondName: z.string(),
-            email: z.string(),
+            email: z.string().email(),
             password: z.string(),
             phone: z.string(),
+            role: z.enum(['admin', 'user']).default('user')
 
         })
     ).mutation(async ({ ctx, input }) => {
         const { db } = ctx
-        const { firstName, secondName, email, password, phone } = input
+        const { firstName, secondName, email, password, phone, role } = input
 
         const salt = await bcrypt.genSalt(10)
-        const hashaedPassword = await bcrypt.hash(password, salt)
+        const hashedPassword = await bcrypt.hash(password, salt)
 
 
-        if (!(db.$connect))
 
-            throw new TRPCError({
-                code: 'INTERNAL_SERVER_ERROR',
-                message: 'Não foi possível se registrar , erro no servidor!!',
-            })
 
-        else
+        try {
+            if (!(db.$connect))
 
-            try {
-                await db.user.create({
-                    data: {
-                        firstName,
-                        secondName,
-                        email,
-                        password: hashaedPassword,
-                        phone,
-                    },
+                throw new TRPCError({
+                    code: 'INTERNAL_SERVER_ERROR',
+                    message: 'Não foi possível se registrar , erro no servidor!!',
                 })
 
-                return { success: true, message: "Cadastro criado com sucesso." }
+            await db.user.create({
+                data: {
+                    firstName,
+                    secondName,
+                    email,
+                    password: hashedPassword,
+                    phone,
+                    imageKey: 'null',
+                    role
 
-            } catch (error) {
-                if (error instanceof Prisma.PrismaClientKnownRequestError) {
-                    throw new TRPCError({
-                        code: "UNAUTHORIZED",
-                        message: "E-mail já existe"
-                    })
                 }
 
+            })
+
+            return { success: true, message: "Cadastro criado com sucesso." }
+
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                throw new TRPCError({
+                    code: "UNAUTHORIZED",
+                    message: "E-mail já existe"
+                })
             }
+
+        }
 
     }),
 
-
-    registerAdmin: publicProcedure.input(
+    updateUser: publicProcedure.input(
         z.object({
-
+            id: z.string(),
+            imageKey: z.string().optional(),
             firstName: z.string(),
-            secondName: z.string(),
-            email: z.string(),
-            password: z.string(),
-            phone: z.string(),
+            secondName: z.string()
 
         })
     ).mutation(async ({ ctx, input }) => {
         const { db } = ctx
-        const { firstName, secondName, email, password, phone } = input
+        const { id, imageKey, firstName, secondName } = input
 
-        const salt = await bcrypt.genSalt(10)
-        const hashaedPassword = await bcrypt.hash(password, salt)
 
 
         if (!(db.$connect))
@@ -174,44 +199,85 @@ export const CreateUser = router({
 
         else
 
-            try {
-                await db.user.create({
-                    data: {
-                        firstName,
-                        secondName,
-                        email,
-                        password: hashaedPassword,
-                        phone,
-                        role: "admin"
-                    },
-                })
-                return { success: true, message: "Cadastro do admin criado." }
-            } catch (error) {
-                if (error instanceof Prisma.PrismaClientKnownRequestError) {
-                    throw new TRPCError({
-                        code: "UNAUTHORIZED",
-                        message: "E-mail já existe"
-                    })
+            await db.user.update({
+                where: { id },
+                data: {
+                    imageKey,
+                    firstName,
+                    secondName,
                 }
 
-            }
+            })
+
+        return { success: true, message: "Perfil atualizado com successo." }
+
 
     }),
+
+
+    // registerAdmin: publicProcedure.input(
+    //     z.object({
+
+    //         firstName: z.string(),
+    //         secondName: z.string(),
+    //         email: z.string(),
+    //         password: z.string(),
+    //         phone: z.string(),
+    //         imageKey: z.string().optional()
+
+    //     })
+    // ).mutation(async ({ ctx, input }) => {
+    //     const { db } = ctx
+    //     const { firstName, secondName, email, password, phone, imageKey } = input
+
+    //     const salt = await bcrypt.genSalt(10)
+    //     const hashedPassword = await bcrypt.hash(password, salt)
+
+
+    //     if (!(db.$connect))
+
+    //         throw new TRPCError({
+    //             code: 'INTERNAL_SERVER_ERROR',
+    //             message: 'Não foi possível se registrar , erro no servidor!!',
+    //         })
+
+    //     else
+
+    //         try {
+    //             await db.user.create({
+    //                 data: {
+    //                     firstName,
+    //                     secondName,
+    //                     email,
+    //                     password: hashedPassword,
+    //                     phone,
+    //                     imageKey,
+    //                     role: "admin"
+    //                 },
+    //             })
+    //             return { success: true, message: "Cadastro do admin criado." }
+    //         } catch (error) {
+    //             if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    //                 throw new TRPCError({
+    //                     code: "UNAUTHORIZED",
+    //                     message: "E-mail já existe"
+    //                 })
+    //             }
+
+    //         }
+
+    // }),
 
     forgotPassword: publicProcedure.input(z.object({
 
         email: z.string().email(),
         phone: z.string(),
+        role: z.enum(['admin', 'user'])
     })).mutation(async ({ ctx, input }) => {
 
         const { db } = ctx
-        const { email, phone } = input
-        const dataUserDB = await db.user.findFirst({ where: { email } }).catch(() => {
-            throw new TRPCError({
-                code: 'INTERNAL_SERVER_ERROR',
-                message: 'Não foi possivel fazer o login, teste mais tarde!',
-            })
-        })
+        const { email, phone, role } = input
+        const dataUserDB = await db.user.findFirst({ where: { email, role } })
 
 
 
@@ -240,8 +306,8 @@ export const CreateUser = router({
                     let date: any;
 
                     // Receiving the values and converting them
-                    date = addMinutes(new Date(), 5)
-                    date = format(date, "HH:mm:ss")
+                    date = parseISO(addMinutes(new Date(), 5).toISOString())
+
 
 
                     await db.user.update({
@@ -299,12 +365,12 @@ export const CreateUser = router({
                     if (date < dataUserDB.passwordResetExpires) {
 
                         const salt = await bcrypt.genSalt(10)
-                        const hashaedPassword = await bcrypt.hash(password, salt)
+                        const hashedPassword = await bcrypt.hash(password, salt)
 
                         await db.user.update({
                             where: { email },
                             data: {
-                                password: hashaedPassword,
+                                password: hashedPassword,
                                 passwordResetExpires: null,
                                 passwordResetToken: null,
                             }

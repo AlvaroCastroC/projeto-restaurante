@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import { format } from "date-fns";
+import { tokenClient } from "./user";
+import { NextApiRequest } from "next";
+import { verifyAuthClient } from "@/lib/auth";
 
 
 export const bookingRouter = router({
@@ -13,20 +15,21 @@ export const bookingRouter = router({
         phone: z.string(),
         email: z.string(),
         service: z.string(),
-        price: z.number()
+        price: z.number(),
+        idEmployee: z.number()
 
     })).mutation(async ({ ctx, input }) => {
         const { db } = ctx
-        const { bookingDate, clientName, phone, email, service, price } = input
+        const { bookingDate, clientName, phone, email, service, price, idEmployee } = input
 
         const dataClient = await db.client.findMany({
             include: {
-                service: true
+                services: true
             }
         })
 
         const isExistClient = dataClient.find(e => e.email === email)
-        const isExistService = isExistClient?.service.find(e => e.clientid === isExistClient.id)
+        const isExistService = isExistClient?.services.find(e => e.clientid === isExistClient.id)
 
 
         if (!db.$connect) throw new TRPCError({
@@ -54,7 +57,7 @@ export const bookingRouter = router({
 
 
 
-            if (isExistClient.service.find(e => e.bookingDate < new Date())) {
+            if (isExistClient.services.find(e => e.bookingDate < new Date())) {
                 await db.services.delete({
                     where: {
                         id: isExistService?.id
@@ -63,16 +66,21 @@ export const bookingRouter = router({
 
             }
 
-            if (isExistClient.service.find(e => format(e.bookingDate, "d M HH:mm") === format(bookingDate, "d M HH:mm"))) {
+            if (isExistClient.services.find(e => e.service === service)) {
                 await db.services.update({
                     where: {
                         id: isExistService?.id
                     },
 
                     data: {
-                        name: service,
+                        service,
                         bookingDate,
                         price,
+                        employees: {
+                            connect: {
+                                id: idEmployee
+                            }
+                        }
                     }
 
                 })
@@ -82,7 +90,7 @@ export const bookingRouter = router({
 
                     data: {
                         bookingDate,
-                        name: service,
+                        service,
                         price,
                         client: {
 
@@ -91,6 +99,11 @@ export const bookingRouter = router({
 
                             },
 
+                        },
+                        employees: {
+                            connect: {
+                                id: idEmployee
+                            }
                         }
                     },
 
@@ -104,12 +117,12 @@ export const bookingRouter = router({
                     clientName,
                     phone,
                     email,
-                    service: {
+                    services: {
                         create: {
-                            name: service,
+                            service,
                             price,
                             bookingDate,
-
+                            employeeId: idEmployee
                         }
                     }
                 },
@@ -124,7 +137,7 @@ export const bookingRouter = router({
 
 
     bookingQuery: publicProcedure.query(async ({ ctx }) => {
-        const { db } = ctx
+        const { db, req } = ctx
 
 
         if (!await db.client.findMany()) {
@@ -134,11 +147,28 @@ export const bookingRouter = router({
             })
         }
 
-        const dataClient = await db.client.findMany({
+        const tokenValueClient = tokenClient(req as NextApiRequest);
+        const verifyTokenClient = tokenValueClient && (await verifyAuthClient(tokenValueClient));
+        if (!verifyTokenClient) {
+            throw new TRPCError({
+                code: "UNAUTHORIZED",
+                message: "Token inválido ou expirado"
+            });
+        }
+        const dataClient = await db.client.findFirst({
+            where: {
+                email: verifyTokenClient.email
+            },
             include: {
-                service: true
+                services: {
+                    include: {
+                        employees: true
+                    }
+                }
             }
         })
+
+        dataClient?.services.map(async e => e.bookingDate < new Date() ? await db.services.delete({ where: { id: e.id } }) : dataClient)
 
         return dataClient
     }),
@@ -147,7 +177,7 @@ export const bookingRouter = router({
     allServiceQuery: publicProcedure.query(async ({ ctx }) => {
         const { db } = ctx
 
-        if (!await db.allServices.findMany()) {
+        if (!await db.allservices.findMany()) {
             throw new TRPCError({
                 code: "INTERNAL_SERVER_ERROR",
                 message: "Erro no servidor, tente mais tarde!"
@@ -155,7 +185,7 @@ export const bookingRouter = router({
         }
 
 
-        const services = await db.allServices.findMany()
+        const services = await db.allservices.findMany()
 
         return services
 
@@ -165,8 +195,13 @@ export const bookingRouter = router({
         id: z.number()
     })).mutation(async ({ ctx, input }) => {
         const { id } = input
-        const { db } = ctx
+        const { db, req } = ctx
 
+        const tokenValueClient = tokenClient(req as NextApiRequest);
+        const verifyTokenClient = tokenValueClient && (await verifyAuthClient(tokenValueClient));
+        if (!verifyTokenClient) return
+
+        const userQuery = await db.services.findMany();
 
 
         if (!db.$connect()) throw new TRPCError({

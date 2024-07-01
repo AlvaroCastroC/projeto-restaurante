@@ -2,6 +2,23 @@ import { extendTheme } from '@chakra-ui/react'
 
 export const theme = extendTheme({
     // Podemos definir cores que ficarão disponíveis para uso em todo o projeto
+
+    styles: {
+        global: {
+            'html, body': {
+                color: 'gray.600',
+                lineHeight: 'tall',
+            },
+            a: {
+                color: 'teal.500',
+            },
+            body: {
+                backgroundColor: 'RGBA(0, 0, 0, 0.04)'
+            }
+        },
+    },
+
+
     colors: {
         success: {
             '100': '#EBFCD8',
@@ -32,8 +49,11 @@ export const theme = extendTheme({
     //     color: 'red'
     // },
     // Podemos definir um colorMode inicial (escolhi o dark 🌙 como padrão )
+
     config: {
         initialColorMode: 'light',
         useSystemColorMode: false,
     },
+
 })
+

@@ -24,6 +24,7 @@ export async function middleware(req: NextRequest) {
     }
 
 
+
     const url = req.url
 
     if (url.includes('/login') && verifyTokenAdmin) {
@@ -32,7 +33,7 @@ export async function middleware(req: NextRequest) {
 
     if (url.includes('/booking')) {
         if (verifyTokenClient) {
-
+            console.log(verifyTokenClient)
             return NextResponse.next()
 
         } else {
@@ -44,6 +45,7 @@ export async function middleware(req: NextRequest) {
     if (!verifyTokenAdmin) {
         return NextResponse.redirect(new URL('/login', req.url))
     }
+
 
 }
 

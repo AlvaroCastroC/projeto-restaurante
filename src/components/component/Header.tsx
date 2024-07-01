@@ -1,63 +1,101 @@
 import { CalendarIcon, HamburgerIcon, } from "@chakra-ui/icons"
 import { GrLogin, } from "react-icons/gr";
+import { FiLogOut } from "react-icons/fi";
+
 import { RiHome2Line, RiMoonLine, RiSunLine } from "react-icons/ri";
-import { Button, FormControl, FormLabel, Menu, MenuButton, MenuItem, MenuList, Popover, PopoverArrow, PopoverBody, PopoverContent, PopoverTrigger, Switch, useBoolean, useColorMode } from "@chakra-ui/react"
+import { Avatar, Box, Button, Divider, Flex, FormControl, FormLabel, HStack, Heading, IconButton, Menu, MenuButton, MenuDivider, MenuItem, MenuList, Popover, PopoverArrow, PopoverBody, PopoverContent, PopoverTrigger, Switch, Text, VStack, useBoolean, useColorMode } from "@chakra-ui/react"
 import Link from "next/link"
+import { api } from "@/utils/api";
+import { useRouter } from "next/router";
+import { destroyCookie } from "nookies";
+
 
 function Header() {
     const { colorMode, toggleColorMode } = useColorMode();
+    const router = useRouter()
+
+    const redirect = () => router.push('/login')
+
+
+    const { data: user } = api.user.userClient.useQuery()
     return (
         <header className=" w-[100%]">
-            <div className="MAX-CONTAINER h-24 flex items-center justify-between ">
+            <div className="MAX-CONTAINER h-20 flex items-center justify-between ">
                 <div className="flex justify-center gap-1">
-                    <img src="" alt="Logo" title="Logo" />
-                    Nome da loja
+                    {/* <img src="" alt="Logo" title="Logo" /> */}
+                    <Heading as='h4' size={'md'}>MARIA BONITA</Heading>
                 </div>
 
-                <nav className="flex items-center gap-3 ">
-                    <Link href="/sobre" className="text-[1.3rem] px-1 transition ease-in duration-400	  hover:border-blue-500 hover:border-b-2 "> Sobre nós </Link>
+                <nav className="flex items-center gap-14 ">
+                    <Link href="/sobre" className="text-[1.3rem] "> Sobre nós </Link>
 
-                    <Popover trigger="hover" >
-                        <PopoverTrigger>
-                            <Button bg="none" _hover={{ bg: "none", color: "blue" }}>Serviços</Button>
-                        </PopoverTrigger>
-                        <PopoverContent w="100% " p="15px">
-                            <PopoverArrow />
-                            <PopoverBody className="flex flex-col items w-full gap-3">
-                                < Link href="/servico1" className="text-[1rem] hover:text-[rgba(7,65,173,1)] " > Serviços 1</Link >
-                                <Link href="/servico2" className="text-[1rem] hover:text-[rgba(7,65,173,1)] ">Serviços 2</Link>
-                                <Link href="/servico3" className="text-[1rem] hover:text-[rgba(7,65,173,1)] ">Serviços 3</Link>
-                            </PopoverBody>
-                        </PopoverContent>
-                    </Popover>
+                    <Link href="/serviços" className="text-[1.3rem] "> Serviços</Link>
 
-                    <Link href="/contato" className="text-[1.3rem] px-1 transition ease-in duration-400 hover:border-blue-500 hover:border-b-2">Contato</Link>
+                    <Link href="/contato" className="text-[1.3rem] ">Contato</Link>
 
 
                 </nav>
-                <Menu >
+                <Menu>
                     <MenuButton
-                        as={Button}
-                        aria-label='Options'
-                        rightIcon={<HamburgerIcon />}
+                        as={IconButton}
+                        aria-label=''
+                        icon={<HamburgerIcon />}
                         variant='none'
                         _hover={{ bgColor: "#Abaa", }}
-                        _active={{ bgColor: "blue" }}
-                    >
-                        Menu
-                    </MenuButton>
+                        _active={{ bgColor: "#Abaa" }}
+                        fontSize={25}
+                    />
 
-                    <MenuList>
+                    <MenuList p={2} zIndex={2}>
 
-                        <MenuItem as={Link} href="/login" icon={<GrLogin />}  >
-                            Login
+                        {
+                            user &&
+                            <>
+                                <Box p={2} mt={4}>
+                                    {
+                                        user.map((item) => {
+                                            if (item === undefined) return
+                                            return (
+                                                <Flex direction={'row'} align={'center'} justify={'flex-start'} gap={2}>
+                                                    <Avatar size={'sm'} src={item.imageKey} name={item.firstName} />
+
+                                                    <VStack>
+                                                        <Text fontSize={'sm'} lineHeight={0.5}>{item.firstName + " " + item.secondName}</Text>
+                                                        <Text fontSize={'sm'} lineHeight={1}>{item.email}</Text>
+
+                                                    </VStack>
+                                                </Flex >
+                                            )
+                                        })
+                                    }
+
+
+
+                                </Box>
+                                <MenuDivider my={4} />
+                            </>
+                        }
+                        <MenuItem as={Link} href="/" icon={<RiHome2Line />} >
+                            Página principal
                         </MenuItem>
-                        <MenuItem as={Link} href='/agendamento' icon={<CalendarIcon />} >
+
+
+                        <MenuItem as={Link} href='/booking' icon={<CalendarIcon />} >
                             Agendar horário
                         </MenuItem>
-                        <MenuItem as={Link} href="/" icon={<RiHome2Line />} >
-                            Home
-                        </MenuItem>
+                        {
+                            !user ? <MenuItem as={Link} href="/login" icon={<GrLogin />}  >
+                                Log in
+                            </MenuItem> : <MenuItem as={'button'} icon={<FiLogOut />} onClick={() => {
+                                destroyCookie(null, 'user-Token-client')
+                                setTimeout(() => {
+                                    location.reload()
+                                }, 1000)
+                            }
+                            } >
+                                Log out
+                            </MenuItem>
+                        }
                         <MenuItem closeOnSelect={false} iconSpacing={"12px"}>
                             <FormControl display='flex' alignItems='center'>
                                 <FormLabel mb='0'>

@@ -1,10 +1,12 @@
-import type { Day } from '@prisma/client'
+import type { day } from '@prisma/client'
 import { add, addMinutes, getHours, getMinutes, isBefore, isEqual, parse } from 'date-fns'
-import { now, INTERVALO } from 'src/constants/config'
+import { now, INTERVALO, categories } from 'src/constants/config'
 
-export const capitalize = (s: string) => s !== undefined && s.charAt(0).toUpperCase() + s.slice(1)
+export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 
+// Vai retornar as catgorias pre-definidas em seu valores e labels
+export const selectOptions = categories.map((category) => ({ value: category, label: capitalize(category) }))
 
 export const weekdayIndexToName = (index: number) => {
     const days = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado']
@@ -30,7 +32,7 @@ export const roundToNearestMinutes = (date: Date, interval: number) => {
  * @returns Array of dates for every opening hour
  */
 
-export const getOpeningTimes = (startDate: Date, dbDays: Day[]) => {
+export const getOpeningTimes = (startDate: Date, dbDays: day[]) => {
     const dayOfWeek = startDate.getDay()
     const isToday = isEqual(startDate, new Date().setHours(0, 0, 0, 0))
 

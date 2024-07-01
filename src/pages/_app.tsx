@@ -4,11 +4,12 @@ import { api } from "@/utils/api"
 
 import Header from "@/components/component/Header"
 import Footer from "@/components/component/Footer"
-import { ToastContainer } from "react-toastify"
+import { Flip, ToastContainer, } from "react-toastify"
 
 import { ChakraProvider } from '@chakra-ui/react'
 import { Router } from "next/router"
 import NProgress from "nprogress"
+
 
 import "@/styles/globals.css"
 import "@/styles/card.css"
@@ -43,7 +44,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
       <main >
 
         <Header />
-        <ToastContainer pauseOnFocusLoss={false} autoClose={2500} limit={1} pauseOnHover={false} />
+        <ToastContainer pauseOnFocusLoss={false} autoClose={2500} limit={1} pauseOnHover={false} transition={Flip} />
         <Component {...pageProps} />
         <Footer />
       </main>

@@ -69,7 +69,6 @@ const Login: FC<loginProps> = ({ cookiesClient }) => {
                 email,
                 password,
             })
-            sessionStorage.setItem("user-data", email);
 
             return true
         }
@@ -122,7 +121,7 @@ const Login: FC<loginProps> = ({ cookiesClient }) => {
                             <div className='w-[288px]'>
 
                                 <Input
-                                    id='email-address'
+
                                     type='email'
                                     className='relative block w-full appearance-none  rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
                                     {...register('email')}

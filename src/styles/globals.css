@@ -31,3 +31,8 @@
     margin-left: 8px;
 
 }
+
+
+::-webkit-scrollbar {
+    display: none;
+}

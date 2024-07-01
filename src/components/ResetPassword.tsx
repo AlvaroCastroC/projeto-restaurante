@@ -7,6 +7,7 @@ import { z } from "zod"
 import { toast } from 'react-toastify'
 import { notifyError } from "@/models/toastifyUse"
 import { useRouter } from "next/router"
+import { Flex, FormControl, FormLabel, Input, } from "@chakra-ui/react"
 
 
 
@@ -38,7 +39,7 @@ const ResetPassword: FC<updateProps> = () => {
     }
 
 
-    const { mutate: resetPassword } = api.admin.resetPassword.useMutation({
+    const { mutate: resetPassword } = api.createUser.resetPassword.useMutation({
         onSuccess: () => {
             setTimeout(redirect, 3000)
             notifySucces()
@@ -66,30 +67,32 @@ const ResetPassword: FC<updateProps> = () => {
     return (
         <div >
             <form onSubmit={handleSubmit(handleSubmitForm)} className="flex flex-col gap-5">
-                <div>
+                <FormControl minWidth={"500px"}>
                     <div>
-                        <input
+                        <FormLabel htmlFor="token">Token de verificação</FormLabel>
+                        <Input
                             id='token'
                             type='text'
 
                             {...register('token')}
 
                             className='relative block w-full appearance-none  rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
-                            placeholder='Digite seu token'
+                            placeholder='Ex.: KsxDss'
                         />
                         {errors.token && <span className="span-form">{errors.token.message}</span>}
 
                     </div>
 
                     <div>
-                        <input
-                            id='email'
+                        <FormLabel htmlFor="email-address">Digite seu novo e-mail</FormLabel>
+                        <Input
+                            id='email-address'
                             type='email'
 
                             {...register('email')}
 
                             className='relative block w-full appearance-none  rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
-                            placeholder='Enderaço de e-mail'
+                            placeholder='exemple@email.com'
                         />
 
                         {errors.email && <span className="span-form">{errors.email.message}</span>}
@@ -98,33 +101,38 @@ const ResetPassword: FC<updateProps> = () => {
 
                     </div>
 
-                    <div>
-                        <input
-                            id='password'
-                            type='password'
+                    <Flex gap={2} >
+                        <Flex direction={"column"} width={"100%"}>
+                            <FormLabel htmlFor="password">Digite sua nova senha</FormLabel>
+                            <Input
+                                id='password'
+                                type='password'
 
-                            {...register('password')}
+                                {...register('password')}
 
-                            className='relative block w-full appearance-none  rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
-                            placeholder='Digite sua senha nova'
-                        />
+                                placeholder="******"
+                            />
 
-                        {errors.password && <span className="span-form">{errors.password.message}</span>}
+                            {errors.password && <span className="span-form">{errors.password.message}</span>}
+                        </Flex>
 
-                        <input
-                            id='ConfirmPassword'
-                            type='Password'
+                        <Flex direction={"column"} width={"100%"}>
+                            <FormLabel htmlFor="ConfirmPassword">Confirme sua nova senha</FormLabel>
+                            <Input
+                                id='ConfirmPassword'
+                                type='Password'
 
-                            {...register('confirmPassword')}
+                                {...register('confirmPassword')}
 
-                            className='relative block w-full appearance-none  rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
-                            placeholder='Confirme sua senha'
-                        />
 
-                        {errors.confirmPassword && <span className="span-form">{errors.confirmPassword.message}</span>}
+                                placeholder='******'
+                            />
 
-                    </div>
-                </div>
+                            {errors.confirmPassword && <span className="span-form">{errors.confirmPassword.message}</span>}
+
+                        </Flex>
+                    </Flex>
+                </FormControl>
                 <div>
                     <button
                         type='submit'

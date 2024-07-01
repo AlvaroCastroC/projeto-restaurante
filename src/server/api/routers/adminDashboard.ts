@@ -1,6 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { adminProcedure, router } from "../trpc";
 import { z } from "zod";
+import { formatISO, parse } from "date-fns";
+
 
 
 export const dashboardRouter = router({
@@ -14,9 +16,12 @@ export const dashboardRouter = router({
 
         const isExistBooking = await db.client.findMany({
             include: {
-                service: {
+                services: {
                     orderBy: {
                         bookingDate: 'asc',
+                    },
+                    include: {
+                        employees: true
                     }
                 }
             },
@@ -51,12 +56,12 @@ export const dashboardRouter = router({
         const { db } = ctx
         const { service, price } = input
 
-        const isExistService = await db.allServices.findFirst({
+        const isExistService = await db.allservices.findFirst({
             where: {
                 service
             }
         })
-        const isExist = await db.allServices.count()
+        const isExist = await db.allservices.count()
         if (!db.$connect) throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             message: "Falha ao reservar, tente mais tarde!"
@@ -66,7 +71,7 @@ export const dashboardRouter = router({
             return { success: false, message: "Aparentemente este serviço já existe!" }
         }
 
-        await db.allServices.create({
+        await db.allservices.create({
             data: {
                 service,
                 price,
@@ -88,7 +93,7 @@ export const dashboardRouter = router({
             message: "Falha ao reservar, tente mais tarde!"
         })
 
-        const allService = await db.allServices.findMany({
+        const allService = await db.allservices.findMany({
             orderBy: {
                 service: 'asc'
             }
@@ -106,7 +111,7 @@ export const dashboardRouter = router({
         const { db } = ctx
         const { service, price, id } = input
 
-        const isExistService = await db.allServices.findFirst({
+        const isExistService = await db.allservices.findFirst({
             where: {
                 service
             }
@@ -118,7 +123,7 @@ export const dashboardRouter = router({
 
         if (!isExistService) {
 
-            await db.allServices.update({
+            await db.allservices.update({
                 where: { id },
                 data: {
                     service,
@@ -143,7 +148,7 @@ export const dashboardRouter = router({
         const { id, optional } = input
         const { db } = ctx
 
-        const isExists = await db.allServices.count()
+        const isExists = await db.allservices.count()
 
         if (!db.$connect()) throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
@@ -153,11 +158,11 @@ export const dashboardRouter = router({
 
         if (isExists) {
             if (optional === "all") {
-                await db.allServices.deleteMany()
+                await db.allservices.deleteMany()
 
                 return { success: true, message: "Concluido." }
             } else {
-                await db.allServices.delete({
+                await db.allservices.delete({
                     where: {
                         id
                     }
@@ -184,7 +189,7 @@ export const dashboardRouter = router({
 
         const clientService = await db.client.findMany({
             include: {
-                service: true
+                services: true
             }
         })
 
@@ -213,5 +218,38 @@ export const dashboardRouter = router({
             })
         }
 
+    }),
+
+    createEmployees: adminProcedure.input(z.object({
+        name: z.string(),
+        initTime: z.string(),
+        imageKey: z.string(),
+        category: z.array(z.union([z.literal('corte'), z.literal('hidratação'), z.literal('pedicure')]))
+    })).mutation(async ({ ctx, input }) => {
+        const { category, initTime, imageKey, name } = input
+        const { db } = ctx
+
+        const data = parse(initTime, 'yyyy-MM-dd', new Date())
+        const dataFormatada = formatISO(data)
+
+
+        await db.employees.create({
+            data: {
+                name,
+                initTime: dataFormatada,
+                category: {
+                    createMany: {
+                        data: category.map(catName => ({ name: catName })),
+                    }
+                },
+                imageKey
+
+            }
+        })
+
+        return { success: true, message: 'Funcionário adicionado' }
     })
+
+
+
 })

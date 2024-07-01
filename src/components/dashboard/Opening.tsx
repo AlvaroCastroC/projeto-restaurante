@@ -9,11 +9,10 @@ import { toast, ToastContainer } from 'react-toastify'
 import { now } from 'src/constants/config'
 import { capitalize, classNames, weekdayIndexToName } from 'src/utils/helper'
 import { api } from '@/utils/api'
-import { db } from '@/server/db'
 import { notifyError } from '@/models/toastifyUse'
 
 interface OpeningProps {
-    days: Day[]
+    days: day[]
 }
 
 const Opening: FC<OpeningProps> = ({ days }) => {
@@ -161,12 +160,6 @@ const Opening: FC<OpeningProps> = ({ days }) => {
     )
 }
 
-export async function getServerSideProps() {
-    const days = await db.day.findMany()
 
-    if (!(days.length === 7)) throw new Error('Insert all days into database')
-
-    return { props: { days } }
-}
 
 export default Opening

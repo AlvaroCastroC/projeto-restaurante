@@ -9,12 +9,15 @@ import InputMask from "react-input-mask"
 import Link from "next/link"
 import { notifyError } from "@/models/toastifyUse"
 import { ImBlocked } from "react-icons/im";
-import { Collapse, useDisclosure } from '@chakra-ui/react'
+import { Box, Button, Collapse, Container, Flex, FormControl, FormHelperText, FormLabel, Input, Spinner, VStack, useDisclosure } from '@chakra-ui/react'
 import ResetPassword from "./ResetPassword"
 
 
-interface updateProps { }
-const UpdateUser: FC<updateProps> = () => {
+
+
+interface updateProps {
+}
+const ForgotPassword: FC<updateProps> = () => {
 
 
     type FormDataProps = z.infer<typeof schemaForgotPassword>
@@ -34,7 +37,7 @@ const UpdateUser: FC<updateProps> = () => {
     }
 
 
-    const { mutate: forgotPassword, isSuccess } = api.admin.forgotPassword.useMutation({
+    const { mutate: forgotPassword, isSuccess } = api.createUser.forgotPassword.useMutation({
         onSuccess: () => {
             setTimeout(onToggle, 3000)
             notifySucces()
@@ -51,20 +54,28 @@ const UpdateUser: FC<updateProps> = () => {
         forgotPassword({
             email,
             phone: phone.replace(/\D/g, ""),
+            role: 'user'
+
         })
 
-        setDesative(true)
     }
 
     const { isOpen, onToggle, } = useDisclosure()
 
-    const [desative, setDesative] = useState(false)
 
     return (
-        <section className='flex min-h-[110vh] items-center justify-center py-12 px-4 sm:px-6 lg:px-8'>
+        <section className='flex min-h-[90vh] items-center justify-center py-12 sm:px-6 lg:px-8'>
+            <Container className='px-7  transition ease-in-out duration-700'
+                maxWidth={'500px'}
+                py={"12"}
+                px={"7"}
+                borderRadius={"6"}
+                _hover={{
+                    boxShadow: "0 20px 50px 5px rgba(0,0,0,0.2)",
+                    backgroundColor: "white"
+                }}  >
 
-            <div className='w-full max-w-md space-y-8 hover:shadow-[0_20px_50px_-5px_rgba(0,0,0,0.2)]  py-12 px-7 rounded-md transition ease-in-out duration-700'>
-                <div>
+                <Box>
                     <img
                         className='mx-auto h-12 w-auto'
                         src='https://tailwindui.com/img/logos/workflow-mark-indigo-600.svg'
@@ -77,61 +88,75 @@ const UpdateUser: FC<updateProps> = () => {
                             retome a página de logIn
                         </Link>
                     </p>
-                </div>
-                <form onSubmit={handleSubmit(handleSubmitForm)} className="flex flex-col gap-5">
-                    <div>
-                        <input
-                            id='email-address'
-                            type='email'
+                </Box>
+                {
+                    !isSuccess ? <form onSubmit={handleSubmit(handleSubmitForm)} className="flex flex-col gap-5">
+                        <FormControl width={"100%"} >
+                            <Flex direction={"column"} gap={5}>
+                                <Flex direction={"column"} >
+                                    <FormLabel htmlFor="email-address">Email</FormLabel>
+                                    <Input
 
-                            {...register('email')}
+                                        id='email-address'
+                                        type='email'
 
-                            className='relative block w-full appearance-none  rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
-                            placeholder='Enderaço de e-mail'
-                        />
+                                        {...register('email')}
 
-                        {errors.email && <span className="span-form">{errors.email.message}</span>}
+                                        placeholder='Enderaço de e-mail'
+                                    />
 
+                                    {errors.email && <FormHelperText >{errors.email.message}</FormHelperText>}
+                                </Flex>
 
-                        <InputMask
-                            className='relative block w-full appearance-none  rounded-md  border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
-
-                            placeholder='Digite seu número de celular'
-
-                            mask="99 99999-9999"
-                            maskPlaceholder={null}
-                            {...register('phone')}
-                        />
-
-                        {errors.phone && <span className="span-form">{errors.phone.message}</span>}
-                    </div>
-                    <div>
-                        <button
-                            type='submit'
-                            disabled={isSuccess && desative}
-                            className='group relative flex w-full justify-center rounded-md border border-transparent disabled:bg-indigo-600 bg-indigo-600 py-2 px-4 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2'>
-
-                            {desative && isSuccess ? <ImBlocked /> : "Enviar"}
-                        </button>
-                    </div>
-                </form>
-
-                <Collapse
-                    in={isOpen}
-
-                    transition={{ exit: { delay: 0.5 }, enter: { duration: 0.5 } }}
-                >
-
-                    <ResetPassword />
+                                <Flex direction={"column"} >
+                                    <FormLabel htmlFor="phone-number">Número de telefone</FormLabel>
+                                    <Input
+                                        as={InputMask}
+                                        id="phone-number"
 
 
-                </Collapse>
+                                        placeholder='Digite seu número de celular'
 
-            </div>
+                                        mask="99 99999-9999"
+                                        maskPlaceholder={null}
+                                        {...register('phone')}
+                                    />
 
+                                    {errors.phone && <FormHelperText >{errors.phone.message}</FormHelperText>}
+                                </Flex>
+                            </Flex>
+                            <Box mt={2} >
+                                <Button
+                                    type='submit'
+
+                                    colorScheme="blue"
+                                    width={"100%"}
+                                >
+
+                                    Enviar
+                                </Button>
+                            </Box>
+                        </FormControl>
+                    </form>
+                        :
+
+                        <Collapse
+                            in={isOpen}
+
+                            transition={{ exit: { delay: 0.5 }, enter: { duration: 0.5 } }}
+                        >
+
+                            <ResetPassword />
+
+
+                        </Collapse>
+                }
+
+
+            </Container>
         </section>
     )
 }
 
 
-export default UpdateUser;
+export default ForgotPassword;

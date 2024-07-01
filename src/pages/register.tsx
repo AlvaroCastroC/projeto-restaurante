@@ -11,7 +11,7 @@ const register: FC<registerProps> = () => {
             <Head>
                 <title>Salão | Register</title>
             </Head>
-            <Register />
+            <Register role="user" />
         </section>
     )
 }
