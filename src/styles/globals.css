@@ -2,37 +2,3 @@
 @tailwind components;
 @tailwind utilities;
 
-
-.image-bg {
-    background-image: url("https://th.bing.com/th/id/OIP.6kV_W8upo0OImr9J1-mTZQHaE7?w=2000&h=1333&rs=1&pid=ImgDetMain");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: cover;
-
-
-}
-
-.MAX-CONTAINER {
-    max-width: 1224px;
-    margin: auto;
-    padding: 20px;
-}
-
-* {
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
-    box-sizing: border-box;
-}
-
-
-.span-form {
-    color: rgb(231, 69, 69);
-    font-size: 0.9rem;
-    margin-left: 8px;
-
-}
-
-
-::-webkit-scrollbar {
-    display: none;
-}

@@ -1,57 +1,53 @@
-import { NextRequest, NextResponse } from "next/server";
-import { verifyAuthAdmin, verifyAuthClient } from "./lib/auth";
+import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { verifyAuthAdmin } from './lib/auth';
 
 export async function middleware(req: NextRequest) {
-    // pegará o token do usuario
+    // Pega o token do usuário
+    const tokenAdmin = req.cookies.get('user-token')?.value;
 
-    const tokenAdmin = req.cookies.get('user-Token-admin')?.value
-    const tokenClient = req.cookies.get('user-Token-client')?.value
-
-    // validará se o usuario ta autenticado
-    const verifyTokenAdmin = tokenAdmin && (await verifyAuthAdmin(tokenAdmin).catch((err) => {
-        console.error(err.message)
-    }))
-
-
-    // validará se o usuario ta autenticado
-    const verifyTokenClient = tokenClient && (await verifyAuthClient(tokenClient).catch((err) => {
-        console.error(err.message)
-    }))
-
-
-    if (req.nextUrl.pathname.startsWith('/login') && !verifyTokenAdmin) {
-        return
-    }
-
-
-
-    const url = req.url
-
-    if (url.includes('/login') && verifyTokenAdmin) {
-        return NextResponse.redirect(new URL('/dashboard', req.url))
-    }
-
-    if (url.includes('/booking')) {
-        if (verifyTokenClient) {
-            console.log(verifyTokenClient)
-            return NextResponse.next()
-
-        } else {
-            return NextResponse.redirect(new URL('/login', req.url))
-
+    // Valida se o usuário está autenticado
+    let verifyToken;
+    if (tokenAdmin) {
+        try {
+            verifyToken = await verifyAuthAdmin(tokenAdmin);
+        } catch (err) {
+            console.error(err);
         }
     }
 
-    if (!verifyTokenAdmin) {
-        return NextResponse.redirect(new URL('/login', req.url))
+
+    //verifica se o usuario tem o token
+    if (req.nextUrl.pathname.startsWith('/login') && !verifyToken) {
+        return NextResponse.next();
     }
 
 
-}
+    const url = req.url;
 
+    //verifica se o usuario tem permição apartir do token de acessar o dashboard 
+
+    if (url.includes('/login') && verifyToken?.admin === true) {
+        return NextResponse.redirect(new URL('/dashboard', req.url));
+    }
+
+    if (url.includes('/login') && verifyToken?.admin === false) {
+        return NextResponse.redirect(new URL('/dashboard', req.url));
+    }
+
+    if (url.includes('/dashboard') && verifyToken?.admin === false) {
+        return NextResponse.redirect(new URL('/', req.url));
+    }
+
+    //caso não tiver o token, será redirecionado para o login
+
+    if (!verifyToken) {
+        return NextResponse.redirect(new URL('/login', req.url));
+    }
+
+    return NextResponse.next();
+}
 
 export const config = {
-    matcher: ['/dashboard/:path*', '/login', '/booking',],
-}
-
-
+    matcher: ['/dashboard/:path*', '/login'],
+};

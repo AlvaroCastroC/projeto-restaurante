@@ -1,3 +1,6 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,91 +10,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model allservices {
-  id        String   @id @default(cuid())
-  service   String
-  price     Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model client {
-  id         String     @id @default(cuid())
-  clientName String
-  phone      String
-  email      String
-  services   services[]
-}
-
-model closedday {
-  id   String   @id
-  date DateTime @unique(map: "ClosedDay_date_key")
-}
-
-model day {
-  id        String @id @default(cuid())
+model User {
+  id        Int       @id @default(autoincrement())
   name      String
-  dayOfWeek Int
-  openTime  String
-  closeTime String
-  initLanch String
-  endLanch  String
+  email     String    @unique
+  password  String
+  role      User_role @default(user)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([name])
 }
 
-model Employees {
-  id       Int      @id @default(autoincrement())
-  name     String
-  imageKey String
-  initTime DateTime
-
-  category Category[]
-  services services[]
-
-  active Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Category {
-  id          Int       @id @default(autoincrement())
-  name        String
-  employeesId Int
-  employees   Employees @relation(fields: [employeesId], references: [id], onDelete: Cascade)
-}
-
-model services {
-  id          Int      @id @default(autoincrement())
-  service     String
-  price       Float
-  bookingDate DateTime
-  clientid    String?
-  client      client?  @relation(fields: [clientid], references: [id], onDelete: Cascade, map: "Services_clientid_fkey")
-
-  employeeId Int
-  employees  Employees @relation(fields: [employeeId], references: [id], map: "Services_employeeId_fkey")
-
-  // @@index([employeeId], map: "Services_employeeId_fkey")
-
-  @@index([clientid], map: "Services_clientid_fkey")
-}
-
-model user {
-  id                   String    @id @default(cuid())
-  firstName            String
-  secondName           String
-  email                String    @unique(map: "User_email_key")
-  password             String
-  phone                String    @db.VarChar(11)
-  imageKey             String
-  role                 user_role @default(user)
-  passwordResetToken   String?   @db.VarChar(200)
-  passwordResetExpires String?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-}
-
-enum user_role {
+enum User_role {
   admin
   user
 }

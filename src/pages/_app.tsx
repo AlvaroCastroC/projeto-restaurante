@@ -1,55 +1,27 @@
 import { type AppType } from "next/app"
-
+import '@/styles/globals.css'
 import { api } from "@/utils/api"
 
-import Header from "@/components/component/Header"
-import Footer from "@/components/component/Footer"
 import { Flip, ToastContainer, } from "react-toastify"
-
-import { ChakraProvider } from '@chakra-ui/react'
-import { Router } from "next/router"
-import NProgress from "nprogress"
-
-
-import "@/styles/globals.css"
-import "@/styles/card.css"
-import "@/styles/Calendar.css"
 import "react-toastify/dist/ReactToastify.css"
-import "@/styles/nprogress.css"
-import { theme } from "@/styles/theme"
+import Header from "./_components/Header";
+import { Providers } from "./providers"
 
-NProgress.configure({
-  showSpinner: false,
-  minimum: 0.5
-
-})
-
-Router.events.on("routeChangeStart", () => {
-  NProgress.start();
-})
-
-Router.events.on("routeChangeComplete", () => {
-  NProgress.done();
-})
-
-Router.events.on("routeChangeError", () => {
-  NProgress.done();
-})
 
 
 
 const MyApp: AppType = ({ Component, pageProps }) => {
   return (
-    <ChakraProvider theme={theme}>
-      <main >
+    <main className="light">
+
+      <Providers>
+        <ToastContainer pauseOnFocusLoss={false} autoClose={2500} limit={1} pauseOnHover={false} transition={Flip} />
 
         <Header />
-        <ToastContainer pauseOnFocusLoss={false} autoClose={2500} limit={1} pauseOnHover={false} transition={Flip} />
         <Component {...pageProps} />
-        <Footer />
-      </main>
+      </Providers>
 
-    </ChakraProvider>
+    </main>
   );
 };
 

@@ -1,69 +1,21 @@
-import { toast } from "react-toastify";
+import { toast, ToastPosition } from "react-toastify";
 
-export const notifyError = (message: string) => {
+interface NotifyProps {
+    message: string,
+    specification: ToastPosition
+}
+
+
+export const notifyError = ({ message, specification }: NotifyProps) => {
     toast.error(message, {
-        position: "top-right",
+        position: specification,
     });
 
 }
 
-
-export const notifySuccess = (message: string | undefined) => {
+export const notifySuccess = ({ message, specification }: NotifyProps) => {
     toast.success(message, {
-        position: "top-center",
+        position: specification,
     });
 
-}
-
-export const notifyWarning = (message: string | undefined) => {
-    toast.warning(message, {
-        position: "top-center",
-    });
-
-}
-
-export const notifyPromise = (tipo: string, message: string, success: boolean) => {
-    const resolveOrReject = new Promise((resolve, reject) => success ? setTimeout(resolve, 2000) : setTimeout(reject, 2000))
-
-    if (tipo === "create") {
-        toast.promise(
-            resolveOrReject,
-            {
-                pending: 'Criando serviço.',
-                success: message,
-                error: message,
-
-            },
-            {
-                autoClose: 1000,
-            }
-        )
-    } else if (tipo === "deleteAll") {
-        toast.promise(
-            resolveOrReject,
-            {
-                pending: 'Excuindo, aguarde alguns segundos.',
-                success: message,
-                error: message,
-
-            },
-            {
-                autoClose: 1000
-            }
-
-        )
-    } else {
-        toast.promise(
-            resolveOrReject,
-            {
-                pending: 'Aguarde.',
-                success: message,
-                error: message,
-
-            },
-            {
-                autoClose: 1000
-            }
-        )
-    }
 }
